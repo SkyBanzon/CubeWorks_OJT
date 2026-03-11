@@ -1,0 +1,786 @@
+[
+    {
+        "id": "02879a116768cda2",
+        "type": "tab",
+        "label": "LevelMeter Read",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7852fdeda0686e90",
+        "type": "modbus-read",
+        "z": "02879a116768cda2",
+        "name": "Level Meter",
+        "topic": "",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "InputRegister",
+        "adr": "100",
+        "quantity": "1",
+        "rate": "4",
+        "rateUnit": "s",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "3bf26672a55906c8",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 190,
+        "y": 320,
+        "wires": [
+            [
+                "b4ef14b0b0846549"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c49e64bf18f27b15",
+        "type": "debug",
+        "z": "02879a116768cda2",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "b4ef14b0b0846549",
+        "type": "range",
+        "z": "02879a116768cda2",
+        "minin": "0",
+        "maxin": "1000",
+        "minout": "0",
+        "maxout": "300",
+        "action": "scale",
+        "round": false,
+        "property": "payload",
+        "name": "",
+        "x": 380,
+        "y": 300,
+        "wires": [
+            [
+                "74df9e33a1a5ce8c",
+                "c49e64bf18f27b15",
+                "6e10b9542d02d7a3"
+            ]
+        ]
+    },
+    {
+        "id": "c2a02b73985583be",
+        "type": "modbus-read",
+        "z": "02879a116768cda2",
+        "name": "Flow Meter",
+        "topic": "",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "InputRegister",
+        "adr": "101",
+        "quantity": "1",
+        "rate": "5",
+        "rateUnit": "s",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "3bf26672a55906c8",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 880,
+        "y": 300,
+        "wires": [
+            [
+                "c1319299ab594fd3",
+                "1cf423c40e550934"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c1319299ab594fd3",
+        "type": "debug",
+        "z": "02879a116768cda2",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1160,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "0230dea95e5e1403",
+        "type": "modbus-write",
+        "z": "02879a116768cda2",
+        "name": "Fill Valve",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "HoldingRegister",
+        "adr": "200",
+        "quantity": "1",
+        "server": "3bf26672a55906c8",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 400,
+        "y": 620,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "1514aac80d9dcfeb",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1000",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 760,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b2c19b84616adf9a",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "500",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 820,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5440612fbd644359",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "100",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 880,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1bc82c53260d1464",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 940,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7f2e98d91c56af53",
+        "type": "modbus-write",
+        "z": "02879a116768cda2",
+        "name": "Discharge Valve",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "HoldingRegister",
+        "adr": "201",
+        "quantity": "1",
+        "server": "3bf26672a55906c8",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 860,
+        "y": 620,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "d77523b7d58f390f",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "1000",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 1020,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "69e5e67533111732",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "500",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 1080,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d7f2b9412043129c",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "100",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 1140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fbc7419c4194d959",
+        "type": "inject",
+        "z": "02879a116768cda2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "num",
+        "x": 1690,
+        "y": 1200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6e10b9542d02d7a3",
+        "type": "ui_chart",
+        "z": "02879a116768cda2",
+        "name": "",
+        "group": "4bf7cef26fb9a056",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Water Level History",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm",
+        "interpolate": "linear",
+        "nodata": "cm",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "300",
+        "removeOlder": "5",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 610,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "8ded0e1a93ac3f14",
+        "type": "ui_slider",
+        "z": "02879a116768cda2",
+        "name": "",
+        "label": "Fill Valve (%)",
+        "tooltip": "",
+        "group": "2ed6324a3917a5f1",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": "1000",
+        "step": "25",
+        "className": "",
+        "x": 210,
+        "y": 620,
+        "wires": [
+            [
+                "0230dea95e5e1403",
+                "850809985519915b"
+            ]
+        ]
+    },
+    {
+        "id": "f7d7a02850acedc8",
+        "type": "ui_slider",
+        "z": "02879a116768cda2",
+        "name": "",
+        "label": "Discharge Valve (%)",
+        "tooltip": "",
+        "group": "2ed6324a3917a5f1",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "all",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": 0,
+        "max": "1000",
+        "step": "25",
+        "className": "",
+        "x": 640,
+        "y": 620,
+        "wires": [
+            [
+                "7f2e98d91c56af53",
+                "25c6ea6291b88066"
+            ]
+        ]
+    },
+    {
+        "id": "a94c6b1128fa381e",
+        "type": "ui_gauge",
+        "z": "02879a116768cda2",
+        "name": "",
+        "group": "2ed6324a3917a5f1",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Fill Gauge",
+        "label": "",
+        "format": "{{value}}% Open",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 490,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "bf2412c61fc342ef",
+        "type": "ui_gauge",
+        "z": "02879a116768cda2",
+        "name": "",
+        "group": "2ed6324a3917a5f1",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Discharge Gauge",
+        "label": "",
+        "format": "{{value}}% Open",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 970,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "74df9e33a1a5ce8c",
+        "type": "ui_text",
+        "z": "02879a116768cda2",
+        "group": "4bf7cef26fb9a056",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Water Level",
+        "format": "{{msg.payload}} cm",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 590,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "850809985519915b",
+        "type": "function",
+        "z": "02879a116768cda2",
+        "name": "/10",
+        "func": "// Divide the incoming slider value (0-1000) by 10\nmsg.payload = msg.payload / 10;\n\n// Return the message to pass 0-100 to the gauge\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 520,
+        "wires": [
+            [
+                "a94c6b1128fa381e"
+            ]
+        ]
+    },
+    {
+        "id": "25c6ea6291b88066",
+        "type": "function",
+        "z": "02879a116768cda2",
+        "name": "/10",
+        "func": "// Divide the incoming slider value (0-1000) by 10\nmsg.payload = msg.payload / 10;\n\n// Return the message to pass 0-100 to the gauge\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 520,
+        "wires": [
+            [
+                "bf2412c61fc342ef"
+            ]
+        ]
+    },
+    {
+        "id": "75b0449d442bff5d",
+        "type": "ui_chart",
+        "z": "02879a116768cda2",
+        "name": "",
+        "group": "aca849f846c7a9df",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Flow/Discharge History",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm",
+        "interpolate": "linear",
+        "nodata": "cm",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "1000",
+        "removeOlder": "5",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1310,
+        "y": 180,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d4c0e8a307474e26",
+        "type": "ui_text",
+        "z": "02879a116768cda2",
+        "group": "aca849f846c7a9df",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Flow Meter",
+        "format": "{{msg.payload}} LPM",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1270,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "1cf423c40e550934",
+        "type": "change",
+        "z": "02879a116768cda2",
+        "name": "ArraytoNum",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload[0]",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1050,
+        "y": 220,
+        "wires": [
+            [
+                "75b0449d442bff5d",
+                "d4c0e8a307474e26"
+            ]
+        ]
+    },
+    {
+        "id": "3bf26672a55906c8",
+        "type": "modbus-client",
+        "name": "FACTORY IO",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.254.114",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "4bf7cef26fb9a056",
+        "type": "ui_group",
+        "name": "Tank Monitoring",
+        "tab": "2a07a8f02c09a69f",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2ed6324a3917a5f1",
+        "type": "ui_group",
+        "name": "Valve Controls",
+        "tab": "2a07a8f02c09a69f",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "aca849f846c7a9df",
+        "type": "ui_group",
+        "name": "Flow & Performance",
+        "tab": "2a07a8f02c09a69f",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2a07a8f02c09a69f",
+        "type": "ui_tab",
+        "name": "Water Tank Demo",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "cd2f25b5b47f6be6",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-modbus": "5.45.2",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]

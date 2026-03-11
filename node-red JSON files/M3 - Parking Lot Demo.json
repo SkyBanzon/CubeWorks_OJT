@@ -1,0 +1,885 @@
+[
+    {
+        "id": "deee828a18a0cdfa",
+        "type": "inject",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "0.1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 410,
+        "y": 120,
+        "wires": [
+            [
+                "108df2c96c08af5f"
+            ]
+        ]
+    },
+    {
+        "id": "59ef4fec91027aa0",
+        "type": "modbus-write",
+        "z": "6d87f9c445c79ce1",
+        "name": "Always-On Belts & Remover",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "MCoils",
+        "adr": "202",
+        "quantity": "5",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 840,
+        "y": 120,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "108df2c96c08af5f",
+        "type": "change",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[true, true, true, true, true]",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 600,
+        "y": 120,
+        "wires": [
+            [
+                "59ef4fec91027aa0"
+            ]
+        ]
+    },
+    {
+        "id": "a21105fe7297697d",
+        "type": "postgresql",
+        "z": "6d87f9c445c79ce1",
+        "name": "Entry Logging",
+        "query": "INSERT INTO occupancy_logs (event_type) VALUES ('Entry');",
+        "postgreSQLConfig": "8c2edcec4518242e",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1120,
+        "y": 300,
+        "wires": [
+            [
+                "4683352c71177742"
+            ]
+        ]
+    },
+    {
+        "id": "16997cf0023381e3",
+        "type": "postgresql",
+        "z": "6d87f9c445c79ce1",
+        "name": "Exit Logging",
+        "query": "INSERT INTO occupancy_logs (event_type) VALUES ('Exit');",
+        "postgreSQLConfig": "8c2edcec4518242e",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1110,
+        "y": 360,
+        "wires": [
+            [
+                "0c694d139354cffc"
+            ]
+        ]
+    },
+    {
+        "id": "c46c0d570c75393a",
+        "type": "modbus-read",
+        "z": "6d87f9c445c79ce1",
+        "name": "Entry Sensor Read",
+        "topic": "entry_sensor",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Input",
+        "adr": "100",
+        "quantity": "1",
+        "rate": "100",
+        "rateUnit": "ms",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "1e8a38970daaca83",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 430,
+        "y": 300,
+        "wires": [
+            [
+                "faedcff7b6ed0800"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a69914e6039c38e6",
+        "type": "modbus-read",
+        "z": "6d87f9c445c79ce1",
+        "name": "Exit Sensor Read",
+        "topic": "exit_sensor",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Input",
+        "adr": "101",
+        "quantity": "1",
+        "rate": "100",
+        "rateUnit": "ms",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "1e8a38970daaca83",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 420,
+        "y": 360,
+        "wires": [
+            [
+                "616daea3629092b7"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "616daea3629092b7",
+        "type": "rbe",
+        "z": "6d87f9c445c79ce1",
+        "name": "exit_sensor",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": true,
+        "property": "payload",
+        "topi": "topic",
+        "x": 650,
+        "y": 360,
+        "wires": [
+            [
+                "f68558fa232b3a69",
+                "25c2df55edfbfaeb"
+            ]
+        ]
+    },
+    {
+        "id": "479b6ad12ffa765d",
+        "type": "ui_button",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "group": "3afe114ebdbff7f3",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Spawn Car",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "topic": "spawn_trigger",
+        "topicType": "str",
+        "x": 410,
+        "y": 620,
+        "wires": [
+            [
+                "f7515a7f822c3ba4"
+            ]
+        ]
+    },
+    {
+        "id": "546f71bb10b30a80",
+        "type": "modbus-write",
+        "z": "6d87f9c445c79ce1",
+        "name": "Spawn Box",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "200",
+        "quantity": "1",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 850,
+        "y": 620,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "4683352c71177742",
+        "type": "debug",
+        "z": "6d87f9c445c79ce1",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1360,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "0c694d139354cffc",
+        "type": "debug",
+        "z": "6d87f9c445c79ce1",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1360,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "c570dc26e36c061e",
+        "type": "ui_button",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "group": "3afe114ebdbff7f3",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Exit Car",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "topic": "release_button",
+        "topicType": "str",
+        "x": 400,
+        "y": 520,
+        "wires": [
+            [
+                "de4957fe3c94ef05",
+                "e2b768e6aa188354"
+            ]
+        ]
+    },
+    {
+        "id": "179d08acd95c8572",
+        "type": "modbus-write",
+        "z": "6d87f9c445c79ce1",
+        "name": "Move Belt",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "201",
+        "quantity": "1",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1500,
+        "y": 520,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "38013ad1cb230849",
+        "type": "function",
+        "z": "6d87f9c445c79ce1",
+        "name": "Auto-Stop",
+        "func": "// Check if the signal is from the Exit Button\nif (msg.topic === \"release_button\" && msg.payload === true) {\n    return { payload: true }; // Start the belt\n}\n\n// Check if the signal is from the Exit Sensor (Looking at Array Index 0)\nif (msg.topic === \"exit_sensor\") {\n    // We check if payload is an array and if the first item is true\n    if (Array.isArray(msg.payload) && msg.payload[0] === true) {\n        return { payload: false }; // STOP the belt\n    } \n    // If you fixed the switch node to send a single boolean instead:\n    else if (msg.payload === true) {\n        return { payload: false }; // STOP the belt\n    }\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1240,
+        "y": 520,
+        "wires": [
+            [
+                "179d08acd95c8572",
+                "58bbbc4643245fb9"
+            ]
+        ]
+    },
+    {
+        "id": "9059ad9302ecc518",
+        "type": "inject",
+        "z": "6d87f9c445c79ce1",
+        "name": "read lot every 1s",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 430,
+        "y": 1040,
+        "wires": [
+            [
+                "699a30cf74ee3bdd"
+            ]
+        ]
+    },
+    {
+        "id": "699a30cf74ee3bdd",
+        "type": "postgresql",
+        "z": "6d87f9c445c79ce1",
+        "name": "read count from db",
+        "query": "SELECT \n  (SELECT COUNT(*) FROM occupancy_logs WHERE event_type = 'Entry') - \n  (SELECT COUNT(*) FROM occupancy_logs WHERE event_type = 'Exit') \nAS total;",
+        "postgreSQLConfig": "8c2edcec4518242e",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 650,
+        "y": 1040,
+        "wires": [
+            [
+                "df36c6f668d7a9bd"
+            ]
+        ]
+    },
+    {
+        "id": "df36c6f668d7a9bd",
+        "type": "function",
+        "z": "6d87f9c445c79ce1",
+        "name": "Format Data",
+        "func": "// Extract the 'total' value from the first row of the database result\nmsg.payload = msg.payload[0].total;\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 850,
+        "y": 1040,
+        "wires": [
+            [
+                "5fe0f3af4dcfe768",
+                "6a5cbaedebeebd61"
+            ]
+        ]
+    },
+    {
+        "id": "5fe0f3af4dcfe768",
+        "type": "ui_gauge",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "group": "db9a5906e59a66ed",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Live Occupancy",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "8",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 1060,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "6a5cbaedebeebd61",
+        "type": "function",
+        "z": "6d87f9c445c79ce1",
+        "name": "Lights",
+        "func": "// Get the current count from the previous node\nlet count = msg.payload;\n\n// Define what the state SHOULD be\nlet greenState = (count < 5);\nlet yellowState = (count >= 5 && count < 9);\nlet redState = (count >= 9);\n\n// 'context' allows the node to remember what it did last time\nlet lastGreen = context.get('lastGreen') || null;\nlet lastYellow = context.get('lastYellow') || null;\nlet lastRed = context.get('lastRed') || null;\n\n// Only send a message if the state has changed\nlet green = (greenState !== lastGreen) ? { payload: greenState } : null;\nlet yellow = (yellowState !== lastYellow) ? { payload: yellowState } : null;\nlet red = (redState !== lastRed) ? { payload: redState } : null;\n\n// Save the current state for the next 1-second check\ncontext.set('lastGreen', greenState);\ncontext.set('lastYellow', yellowState);\ncontext.set('lastRed', redState);\n\nreturn [green, yellow, red];",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1030,
+        "y": 1120,
+        "wires": [
+            [
+                "4502f4e5e3d78fcf"
+            ],
+            [
+                "cd14aebc5cfc4ec3"
+            ],
+            [
+                "69f74ff17ce2f45d"
+            ]
+        ]
+    },
+    {
+        "id": "4502f4e5e3d78fcf",
+        "type": "modbus-write",
+        "z": "6d87f9c445c79ce1",
+        "name": "Green Light",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "207",
+        "quantity": "1",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1230,
+        "y": 1120,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "cd14aebc5cfc4ec3",
+        "type": "modbus-write",
+        "z": "6d87f9c445c79ce1",
+        "name": "Yellow Light",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "208",
+        "quantity": "1",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1230,
+        "y": 1180,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "69f74ff17ce2f45d",
+        "type": "modbus-write",
+        "z": "6d87f9c445c79ce1",
+        "name": "Red Light",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "209",
+        "quantity": "1",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1220,
+        "y": 1240,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "f7515a7f822c3ba4",
+        "type": "trigger",
+        "z": "6d87f9c445c79ce1",
+        "name": "auto-reset button",
+        "op1": "true",
+        "op2": "false",
+        "op1type": "bool",
+        "op2type": "bool",
+        "duration": "250",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "ms",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 650,
+        "y": 620,
+        "wires": [
+            [
+                "546f71bb10b30a80"
+            ]
+        ]
+    },
+    {
+        "id": "faedcff7b6ed0800",
+        "type": "rbe",
+        "z": "6d87f9c445c79ce1",
+        "name": "entry_sensor",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": true,
+        "property": "payload",
+        "topi": "topic",
+        "x": 650,
+        "y": 300,
+        "wires": [
+            [
+                "14d76ab06f01eef5"
+            ]
+        ]
+    },
+    {
+        "id": "cafb6e2343a12925",
+        "type": "trigger",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "op1": "true",
+        "op2": "false",
+        "op1type": "bool",
+        "op2type": "bool",
+        "duration": "1.2",
+        "extend": true,
+        "overrideDelay": false,
+        "units": "s",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 1250,
+        "y": 440,
+        "wires": [
+            [
+                "179d08acd95c8572"
+            ]
+        ]
+    },
+    {
+        "id": "14d76ab06f01eef5",
+        "type": "switch",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "property": "payload[0]",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 890,
+        "y": 300,
+        "wires": [
+            [
+                "a21105fe7297697d",
+                "cafb6e2343a12925"
+            ]
+        ]
+    },
+    {
+        "id": "f68558fa232b3a69",
+        "type": "switch",
+        "z": "6d87f9c445c79ce1",
+        "name": "",
+        "property": "payload[0]",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 890,
+        "y": 360,
+        "wires": [
+            [
+                "16997cf0023381e3",
+                "38013ad1cb230849",
+                "8061b963facc7d06"
+            ]
+        ]
+    },
+    {
+        "id": "04baa8323be691a2",
+        "type": "inject",
+        "z": "6d87f9c445c79ce1",
+        "name": "Reset on start",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "false",
+        "payloadType": "bool",
+        "x": 1260,
+        "y": 600,
+        "wires": [
+            [
+                "179d08acd95c8572"
+            ]
+        ]
+    },
+    {
+        "id": "25c2df55edfbfaeb",
+        "type": "debug",
+        "z": "6d87f9c445c79ce1",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "8061b963facc7d06",
+        "type": "debug",
+        "z": "6d87f9c445c79ce1",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1000,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "de4957fe3c94ef05",
+        "type": "debug",
+        "z": "6d87f9c445c79ce1",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "58bbbc4643245fb9",
+        "type": "debug",
+        "z": "6d87f9c445c79ce1",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1460,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "e2b768e6aa188354",
+        "type": "trigger",
+        "z": "6d87f9c445c79ce1",
+        "name": "auto-reset button",
+        "op1": "true",
+        "op2": "false",
+        "op1type": "bool",
+        "op2type": "bool",
+        "duration": "250",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "ms",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 650,
+        "y": 520,
+        "wires": [
+            [
+                "38013ad1cb230849"
+            ]
+        ]
+    },
+    {
+        "id": "1e8a38970daaca83",
+        "type": "modbus-client",
+        "name": "FACTORY IO HOME",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.254.111",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 100,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "8c2edcec4518242e",
+        "type": "postgreSQLConfig",
+        "name": "warehouse_db",
+        "host": "127.0.0.1",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "warehouse_db",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "54543210a",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "3afe114ebdbff7f3",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "5a74f5cd49c9a643",
+        "order": 1,
+        "disp": false,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "db9a5906e59a66ed",
+        "type": "ui_group",
+        "name": "Live Count",
+        "tab": "5a74f5cd49c9a643",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "5a74f5cd49c9a643",
+        "type": "ui_tab",
+        "name": "Parking Lot Demo",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "e5e6bd560a52440e",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-modbus": "5.45.2",
+            "node-red-contrib-postgresql": "0.15.4",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]

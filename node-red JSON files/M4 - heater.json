@@ -1,0 +1,882 @@
+[
+    {
+        "id": "e6e2731d63337991",
+        "type": "modbus-read",
+        "z": "f732b9552566a35c",
+        "name": "Diffuse Sensor",
+        "topic": "diffuse_sensor",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Input",
+        "adr": "100",
+        "quantity": "1",
+        "rate": "100",
+        "rateUnit": "ms",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "181499f8d5ee5473",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 160,
+        "y": 340,
+        "wires": [
+            [
+                "ef0698d6631d69fd"
+            ],
+            [
+                "8303b41397463ca0"
+            ]
+        ]
+    },
+    {
+        "id": "c31f56c5cf7d32ce",
+        "type": "switch",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "true"
+            },
+            {
+                "t": "false"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 610,
+        "y": 340,
+        "wires": [
+            [
+                "8aa2c3504a24775c",
+                "c4a9558a5146ebde"
+            ],
+            [
+                "10a33d82497bb28d",
+                "c734b197475a0b70"
+            ]
+        ]
+    },
+    {
+        "id": "136ce45db9ff6158",
+        "type": "function",
+        "z": "f732b9552566a35c",
+        "name": "Heating Sequence",
+        "func": "if (msg.payload !== true) return null;\n\nlet timerDuration = flow.get(\"treatment_time\") || 5;\n\nlet stopBelt = { payload: false };\nlet startHeater = { payload: true };\nlet startTrigger = { payload: true };\nlet dbLog = {\n    payload: {},\n    params: [timerDuration]\n};\n\nnode.send([stopBelt, startHeater, startTrigger, dbLog]);\n\nsetTimeout(function () {\n    let startBelt = { payload: true };\n    let stopHeater = { payload: false };\n    node.send([startBelt, stopHeater, null, null]);\n    node.done();\n}, timerDuration * 1000);\n\nreturn null;",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1310,
+        "y": 340,
+        "wires": [
+            [
+                "351f0a1cd70b6347"
+            ],
+            [
+                "ae0f9783f4c3a7e1"
+            ],
+            [
+                "73e66a9f4191456d"
+            ],
+            [
+                "74c032a81940ccba",
+                "640870db5a8bc604"
+            ]
+        ]
+    },
+    {
+        "id": "351f0a1cd70b6347",
+        "type": "modbus-write",
+        "z": "f732b9552566a35c",
+        "name": "Belt Motor",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "201",
+        "quantity": "1",
+        "server": "181499f8d5ee5473",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1570,
+        "y": 240,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "ae0f9783f4c3a7e1",
+        "type": "modbus-write",
+        "z": "f732b9552566a35c",
+        "name": "Warning Light",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "202",
+        "quantity": "1",
+        "server": "181499f8d5ee5473",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 1580,
+        "y": 300,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "640870db5a8bc604",
+        "type": "postgresql",
+        "z": "f732b9552566a35c",
+        "name": "log in db",
+        "query": "INSERT INTO treatment_logs (status, process_duration_sec) VALUES ('Completed', $1);",
+        "postgreSQLConfig": "e475606091254548",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1560,
+        "y": 420,
+        "wires": [
+            [
+                "ebb344422a2ec4d2"
+            ]
+        ]
+    },
+    {
+        "id": "8303b41397463ca0",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 360,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "52ab174f216df095",
+        "type": "ui_slider",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "label": "Set Treatment Time (sec)",
+        "tooltip": "",
+        "group": "dbe82b102c751016",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "outs": "end",
+        "topic": "topic",
+        "topicType": "msg",
+        "min": "5",
+        "max": 10,
+        "step": 1,
+        "className": "",
+        "x": 190,
+        "y": 520,
+        "wires": [
+            [
+                "f4db89cfe030b21c"
+            ]
+        ]
+    },
+    {
+        "id": "317f4948d242c0ef",
+        "type": "ui_gauge",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "group": "cc3d0fdc5106717b",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "wave",
+        "title": "Heating Countdown",
+        "label": " secs",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 10,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 1790,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "73e66a9f4191456d",
+        "type": "function",
+        "z": "f732b9552566a35c",
+        "name": "countdown",
+        "func": "// 1. Clear any existing timer already running on this node\nlet oldCounter = context.get('counter');\nif (oldCounter) {\n    clearInterval(oldCounter);\n}\n\n// 2. Only start counting if we receive a 'true' trigger\nif (msg.payload === true) {\n    let timeLeft = flow.get(\"treatment_time\") || 5;\n\n    // Send the starting number to the gauge\n    node.send({ payload: timeLeft });\n\n    // 3. Start the new timer\n    let counter = setInterval(function() {\n        timeLeft--;\n        \n        if (timeLeft <= 0) {\n            clearInterval(counter);\n            context.set('counter', null); // Clean up context\n            node.send({ payload: 0 });\n        } else {\n            node.send({ payload: timeLeft });\n        }\n    }, 1000);\n\n    // 4. Save the timer ID so we can kill it if a new box arrives early\n    context.set('counter', counter);\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1570,
+        "y": 360,
+        "wires": [
+            [
+                "317f4948d242c0ef",
+                "7f8acc16ccfa4055"
+            ]
+        ]
+    },
+    {
+        "id": "f4db89cfe030b21c",
+        "type": "change",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "treatment_time",
+                "pt": "flow",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 450,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7f8acc16ccfa4055",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1800,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "6bf5ce871e2a49e0",
+        "type": "ui_button",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "group": "dbe82b102c751016",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "label": "Spawn Material",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 160,
+        "y": 160,
+        "wires": [
+            [
+                "24d69f9e49e64658"
+            ]
+        ]
+    },
+    {
+        "id": "26047f4fe6ce0843",
+        "type": "modbus-write",
+        "z": "f732b9552566a35c",
+        "name": "spawn material",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "200",
+        "quantity": "1",
+        "server": "181499f8d5ee5473",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 580,
+        "y": 160,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "24d69f9e49e64658",
+        "type": "trigger",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "op1": "true",
+        "op2": "false",
+        "op1type": "bool",
+        "op2type": "bool",
+        "duration": "250",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "ms",
+        "reset": "",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 360,
+        "y": 160,
+        "wires": [
+            [
+                "26047f4fe6ce0843"
+            ]
+        ]
+    },
+    {
+        "id": "65485b69a1ba49e6",
+        "type": "inject",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "0.1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 80,
+        "wires": [
+            [
+                "ae487be5088c82d7"
+            ]
+        ]
+    },
+    {
+        "id": "ae487be5088c82d7",
+        "type": "modbus-write",
+        "z": "f732b9552566a35c",
+        "name": "Remover",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "203",
+        "quantity": "1",
+        "server": "181499f8d5ee5473",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 320,
+        "y": 80,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "8aa2c3504a24775c",
+        "type": "trigger",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "op1": "",
+        "op2": "true",
+        "op1type": "pay",
+        "op2type": "bool",
+        "duration": "0",
+        "extend": false,
+        "overrideDelay": false,
+        "units": "ms",
+        "reset": "false",
+        "bytopic": "all",
+        "topic": "topic",
+        "outputs": 1,
+        "x": 1080,
+        "y": 340,
+        "wires": [
+            [
+                "136ce45db9ff6158",
+                "8d2e7fc51a0a8eb6"
+            ]
+        ]
+    },
+    {
+        "id": "c4a9558a5146ebde",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "8d2e7fc51a0a8eb6",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1260,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "10a33d82497bb28d",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "ef0698d6631d69fd",
+        "type": "change",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload[0]",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 400,
+        "y": 340,
+        "wires": [
+            [
+                "c31f56c5cf7d32ce",
+                "04982856144d7f8f"
+            ]
+        ]
+    },
+    {
+        "id": "04982856144d7f8f",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 6",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 540,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "c734b197475a0b70",
+        "type": "change",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "false",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 840,
+        "y": 400,
+        "wires": [
+            [
+                "8aa2c3504a24775c",
+                "b97fad9d860d59da"
+            ]
+        ]
+    },
+    {
+        "id": "b97fad9d860d59da",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1020,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "5ac6f59e6bb236ee",
+        "type": "postgresql",
+        "z": "f732b9552566a35c",
+        "name": "poll data",
+        "query": "SELECT \n    process_duration_sec AS value, \n    log_time AS timestamp,\n    (SELECT COUNT(*) FROM treatment_logs) AS total_count\nFROM treatment_logs \nORDER BY log_time DESC \nLIMIT 10;",
+        "postgreSQLConfig": "e475606091254548",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 1260,
+        "y": 580,
+        "wires": [
+            [
+                "c763c5cce8ac8b39",
+                "d86d5eec73136344"
+            ]
+        ]
+    },
+    {
+        "id": "c763c5cce8ac8b39",
+        "type": "function",
+        "z": "f732b9552566a35c",
+        "name": "split data",
+        "func": "// Output 1 -> Chart\nlet chartData = [{\n    \"series\": [\"Cooking Time\"],\n    \"data\": [msg.payload.map(row => ({\n        \"x\": new Date(row.timestamp).getTime(),  // Chart needs ms epoch\n        \"y\": Number(row.value)\n    })).reverse()]\n}];\n\n// Output 2 -> \"# of Items Heated\" Text Node\nlet totalCount = msg.payload.length > 0 ? msg.payload[0].total_count : 0;\n\nreturn [\n    { payload: chartData },\n    { payload: String(totalCount) }\n];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1440,
+        "y": 580,
+        "wires": [
+            [
+                "a26d745b4035124c"
+            ],
+            [
+                "6ea5e4586cb221d1"
+            ]
+        ]
+    },
+    {
+        "id": "a26d745b4035124c",
+        "type": "ui_chart",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "group": "218a162b127eeeee",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "label": "",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "4",
+        "ymax": "11",
+        "removeOlder": "3",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1650,
+        "y": 580,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6ea5e4586cb221d1",
+        "type": "ui_text",
+        "z": "f732b9552566a35c",
+        "group": "218a162b127eeeee",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "# of Items Heated: ",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 1670,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "bcfac2e6a2375f69",
+        "type": "inject",
+        "z": "f732b9552566a35c",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 1070,
+        "y": 580,
+        "wires": [
+            [
+                "5ac6f59e6bb236ee"
+            ]
+        ]
+    },
+    {
+        "id": "74c032a81940ccba",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1460,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "d86d5eec73136344",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 9",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1420,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "ebb344422a2ec4d2",
+        "type": "debug",
+        "z": "f732b9552566a35c",
+        "name": "debug 10",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1760,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "181499f8d5ee5473",
+        "type": "modbus-client",
+        "name": "factoryIO cubeworks",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "10.40.71.84",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "e475606091254548",
+        "type": "postgreSQLConfig",
+        "name": "thermal_process_db",
+        "host": "127.0.0.1",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "thermal_process_db",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "54543210a",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "dbe82b102c751016",
+        "type": "ui_group",
+        "name": "Controller",
+        "tab": "615fb66fb39ae8d5",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "cc3d0fdc5106717b",
+        "type": "ui_group",
+        "name": "Current State",
+        "tab": "615fb66fb39ae8d5",
+        "order": 2,
+        "disp": false,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "218a162b127eeeee",
+        "type": "ui_group",
+        "name": "Heater History",
+        "tab": "615fb66fb39ae8d5",
+        "order": 3,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "615fb66fb39ae8d5",
+        "type": "ui_tab",
+        "name": "Thermal Heater Demo",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "a6e9907806aa596f",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-modbus": "5.45.2",
+            "node-red-contrib-postgresql": "0.15.4",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]

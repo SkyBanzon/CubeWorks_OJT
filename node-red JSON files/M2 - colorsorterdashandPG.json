@@ -1,0 +1,847 @@
+[
+    {
+        "id": "881e69fcec6d72ee",
+        "type": "inject",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 190,
+        "y": 300,
+        "wires": [
+            [
+                "89515e755ee68c20"
+            ]
+        ]
+    },
+    {
+        "id": "89515e755ee68c20",
+        "type": "function",
+        "z": "984cca2f7cf461b2",
+        "name": "Start All Belts",
+        "func": "// We send an array of 5 'true' values to turn on all segments\n// Address 200: 6m Belt, 201-203: 2m Belts, 204: Curved Belt\nmsg.payload = [true, true, true, true, true];\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 300,
+        "wires": [
+            [
+                "8bf884382fc3e1db"
+            ]
+        ]
+    },
+    {
+        "id": "8bf884382fc3e1db",
+        "type": "modbus-write",
+        "z": "984cca2f7cf461b2",
+        "name": "Belts",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "MCoils",
+        "adr": "200",
+        "quantity": "5",
+        "server": "3bf26672a55906c8",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 670,
+        "y": 300,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "6002361397defc30",
+        "type": "modbus-read",
+        "z": "984cca2f7cf461b2",
+        "name": "Sensors and Pushers",
+        "topic": "",
+        "showStatusActivities": false,
+        "logIOActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Input",
+        "adr": "100",
+        "quantity": "5",
+        "rate": "100",
+        "rateUnit": "ms",
+        "delayOnStart": false,
+        "enableDeformedMessages": false,
+        "startDelayTime": "",
+        "server": "3bf26672a55906c8",
+        "useIOFile": false,
+        "ioFile": "",
+        "useIOForPayload": false,
+        "emptyMsgOnFail": false,
+        "x": 220,
+        "y": 560,
+        "wires": [
+            [
+                "a03bea43a100fa36"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "a03bea43a100fa36",
+        "type": "function",
+        "z": "984cca2f7cf461b2",
+        "name": "Sort & Log",
+        "func": "// msg.payload[0-2] = Color Sensors (100, 101, 102)\n// msg.payload[3-4] = Front Limits (103, 104)\nlet inputs = msg.payload;\n\nlet blueAct = null;\nlet greenAct = null;\n\n// Pass the raw sensor state (true or false) to the filters\nlet blueLog = { payload: inputs[0] };\nlet greenLog = { payload: inputs[1] };\nlet metalLog = { payload: inputs[2] };\n\n// --- PUSHING LOGIC ---\nif (inputs[0] === true) { blueAct = { payload: true }; }\nif (inputs[1] === true) { greenAct = { payload: true }; }\n\n// --- RETRACTION LOGIC ---\nif (inputs[3] === true) { blueAct = { payload: false }; }\nif (inputs[4] === true) { greenAct = { payload: false }; }\n\nreturn [blueAct, greenAct, blueLog, greenLog, metalLog];",
+        "outputs": 5,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 560,
+        "wires": [
+            [
+                "c985e089a0266183"
+            ],
+            [
+                "3961ded7907d0f9b"
+            ],
+            [
+                "6898aa9f743c48a8"
+            ],
+            [
+                "31aaa6e4824786e4"
+            ],
+            [
+                "c9e50c3148197f4b"
+            ]
+        ]
+    },
+    {
+        "id": "c985e089a0266183",
+        "type": "modbus-write",
+        "z": "984cca2f7cf461b2",
+        "name": "Blue Action",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "205",
+        "quantity": "1",
+        "server": "3bf26672a55906c8",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 690,
+        "y": 460,
+        "wires": [
+            [
+                "9a9d5625d0e507db"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "66728e3770907286",
+        "type": "inject",
+        "z": "984cca2f7cf461b2",
+        "name": "spawn every 2",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 200,
+        "wires": [
+            [
+                "bd79b39d22fdbf94"
+            ]
+        ]
+    },
+    {
+        "id": "bd79b39d22fdbf94",
+        "type": "modbus-write",
+        "z": "984cca2f7cf461b2",
+        "name": "Material Spawner",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "207",
+        "quantity": "1",
+        "server": "3bf26672a55906c8",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 710,
+        "y": 200,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "9a9d5625d0e507db",
+        "type": "debug",
+        "z": "984cca2f7cf461b2",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "3961ded7907d0f9b",
+        "type": "modbus-write",
+        "z": "984cca2f7cf461b2",
+        "name": "Green Action",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "Coil",
+        "adr": "206",
+        "quantity": "1",
+        "server": "3bf26672a55906c8",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 690,
+        "y": 520,
+        "wires": [
+            [
+                "af4df16792f7e6fa"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "af4df16792f7e6fa",
+        "type": "debug",
+        "z": "984cca2f7cf461b2",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "75edf8d2e6fa389e",
+        "type": "inject",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 190,
+        "y": 400,
+        "wires": [
+            [
+                "6006df0c23a04be6"
+            ]
+        ]
+    },
+    {
+        "id": "6006df0c23a04be6",
+        "type": "function",
+        "z": "984cca2f7cf461b2",
+        "name": "reset pushers",
+        "func": "\n// Force both pushers to false (Off) the second the flow starts\nreturn [\n    { payload: false }, // Output 1\n    { payload: false }  // Output 2\n];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 400,
+        "wires": [
+            [
+                "c985e089a0266183"
+            ],
+            [
+                "3961ded7907d0f9b"
+            ]
+        ]
+    },
+    {
+        "id": "327229c40a0402f4",
+        "type": "postgresql",
+        "z": "984cca2f7cf461b2",
+        "name": "Log Blue",
+        "query": "INSERT INTO material_counts (material_type) VALUES ('Blue');",
+        "postgreSQLConfig": "357c56015d7b3a32",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 920,
+        "y": 640,
+        "wires": [
+            [
+                "a6090a7c23a2843b"
+            ]
+        ]
+    },
+    {
+        "id": "a6090a7c23a2843b",
+        "type": "debug",
+        "z": "984cca2f7cf461b2",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1100,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "e288575c85ca4eed",
+        "type": "postgresql",
+        "z": "984cca2f7cf461b2",
+        "name": "Log Green",
+        "query": "INSERT INTO material_counts (material_type) VALUES ('Green');",
+        "postgreSQLConfig": "357c56015d7b3a32",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 930,
+        "y": 700,
+        "wires": [
+            [
+                "3acdd73fcd8e9107"
+            ]
+        ]
+    },
+    {
+        "id": "3acdd73fcd8e9107",
+        "type": "debug",
+        "z": "984cca2f7cf461b2",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1100,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "d431c6d1194b8a1b",
+        "type": "postgresql",
+        "z": "984cca2f7cf461b2",
+        "name": "Log Metal",
+        "query": "INSERT INTO material_counts (material_type) VALUES ('Metal');",
+        "postgreSQLConfig": "357c56015d7b3a32",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 920,
+        "y": 760,
+        "wires": [
+            [
+                "33d984c15d46781c"
+            ]
+        ]
+    },
+    {
+        "id": "33d984c15d46781c",
+        "type": "debug",
+        "z": "984cca2f7cf461b2",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1100,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "6898aa9f743c48a8",
+        "type": "rbe",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": false,
+        "property": "payload",
+        "topi": "topic",
+        "x": 650,
+        "y": 640,
+        "wires": [
+            [
+                "af10062fce3c14f4"
+            ]
+        ]
+    },
+    {
+        "id": "31aaa6e4824786e4",
+        "type": "rbe",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": false,
+        "property": "payload",
+        "topi": "topic",
+        "x": 650,
+        "y": 700,
+        "wires": [
+            [
+                "f841772bbf756d24"
+            ]
+        ]
+    },
+    {
+        "id": "c9e50c3148197f4b",
+        "type": "rbe",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": false,
+        "property": "payload",
+        "topi": "topic",
+        "x": 650,
+        "y": 760,
+        "wires": [
+            [
+                "2a83525a804a7bc1"
+            ]
+        ]
+    },
+    {
+        "id": "af10062fce3c14f4",
+        "type": "switch",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "true",
+                "vt": "jsonata"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 770,
+        "y": 640,
+        "wires": [
+            [
+                "327229c40a0402f4"
+            ]
+        ]
+    },
+    {
+        "id": "f841772bbf756d24",
+        "type": "switch",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "true",
+                "vt": "jsonata"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 770,
+        "y": 700,
+        "wires": [
+            [
+                "e288575c85ca4eed"
+            ]
+        ]
+    },
+    {
+        "id": "2a83525a804a7bc1",
+        "type": "switch",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "true",
+                "vt": "jsonata"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 770,
+        "y": 760,
+        "wires": [
+            [
+                "d431c6d1194b8a1b"
+            ]
+        ]
+    },
+    {
+        "id": "a8c335b237a2b474",
+        "type": "inject",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "2",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 170,
+        "y": 920,
+        "wires": [
+            [
+                "2f90bff9ddfee93f"
+            ]
+        ]
+    },
+    {
+        "id": "2f90bff9ddfee93f",
+        "type": "postgresql",
+        "z": "984cca2f7cf461b2",
+        "name": "Get Counts",
+        "query": "SELECT material_type, COUNT(*) as total \nFROM material_counts \nGROUP BY material_type;",
+        "postgreSQLConfig": "357c56015d7b3a32",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 350,
+        "y": 920,
+        "wires": [
+            [
+                "3ff92ad56d71d860",
+                "d74a66cd64e8024a"
+            ]
+        ]
+    },
+    {
+        "id": "3ff92ad56d71d860",
+        "type": "function",
+        "z": "984cca2f7cf461b2",
+        "name": "Chart Format",
+        "func": "let data = msg.payload;\nlet totalCount = 0;\n\n// Format for Chart (Output 1)\nlet chartData = {\n    \"series\": [\"Materials\"],\n    \"data\": [[]],\n    \"labels\": []\n};\n\ndata.forEach(row => {\n    let count = parseInt(row.total);\n    chartData.labels.push(row.material_type);\n    chartData.data[0].push(count);\n    totalCount += count; // Calculate the sum here\n});\n\n// Output 1 goes to Chart, Output 2 goes to Gauge\nreturn [{ payload: [chartData] }, { payload: totalCount }];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 530,
+        "y": 920,
+        "wires": [
+            [
+                "eec50b3b25e99409"
+            ],
+            [
+                "7b2ec7303c02458c"
+            ]
+        ]
+    },
+    {
+        "id": "eec50b3b25e99409",
+        "type": "ui_chart",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "group": "e757cf3fe9a36b2d",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Live Material Count",
+        "chartType": "bar",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#848287",
+            "#2ca02c",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 730,
+        "y": 920,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d74a66cd64e8024a",
+        "type": "ui_table",
+        "z": "984cca2f7cf461b2",
+        "group": "171868b714a45e56",
+        "name": "",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "columns": [
+            {
+                "field": "material_type",
+                "title": "Material Color",
+                "width": "",
+                "align": "center",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            },
+            {
+                "field": "total",
+                "title": "Count",
+                "width": "",
+                "align": "center",
+                "formatter": "plaintext",
+                "formatterParams": {
+                    "target": "_blank"
+                }
+            }
+        ],
+        "outputs": 0,
+        "cts": false,
+        "x": 510,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "7b2ec7303c02458c",
+        "type": "ui_gauge",
+        "z": "984cca2f7cf461b2",
+        "name": "",
+        "group": "171868b714a45e56",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Total Count of Materials",
+        "label": "",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "diff": false,
+        "className": "",
+        "x": 750,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "3bf26672a55906c8",
+        "type": "modbus-client",
+        "name": "FACTORY IO NCR",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.50.241",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 1000,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "357c56015d7b3a32",
+        "type": "postgreSQLConfig",
+        "name": "color_sorter_db",
+        "host": "127.0.0.1",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "color_sorter_db",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "54543210a",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "e757cf3fe9a36b2d",
+        "type": "ui_group",
+        "name": "Material Statistics",
+        "tab": "396a7c458b5b3aaf",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "171868b714a45e56",
+        "type": "ui_group",
+        "name": "Table Data",
+        "tab": "396a7c458b5b3aaf",
+        "order": 2,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "396a7c458b5b3aaf",
+        "type": "ui_tab",
+        "name": "Color Sorter Demo",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "420bfce0fc02c21b",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-modbus": "5.45.2",
+            "node-red-contrib-postgresql": "0.15.4",
+            "node-red-dashboard": "3.6.6",
+            "node-red-node-ui-table": "0.4.5"
+        }
+    }
+]
