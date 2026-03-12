@@ -1,0 +1,393 @@
+[
+    {
+        "id": "4d1437723ed8ce5d",
+        "type": "function",
+        "z": "c0f40a06e4cbcccd",
+        "name": "brain",
+        "func": "// 1. INITIALIZATION\nlet state = context.get('state') || \"RED\";\nlet timer = context.get('timer') || 100;\n\n// 2. GET CONFIGURABLE DURATIONS\nlet redDur = flow.get('redDuration') || 10;\nlet greenDur = flow.get('greenDuration') || 8;\nlet yellowDur = flow.get('yellowDuration') || 3;\n\n// 3. COUNTDOWN LOGIC\ntimer--;\n//node.warn(\"timer: \" + timer + \" state: \" + state);\nlet dbMsg = null;\n\n// 4. STATE TRANSITION LOGIC\nif (timer <= 0) {\n    let prevLight = state; // Capture BEFORE changing state\n    let prevDuration = prevLight === \"RED\" ? redDur : prevLight === \"GREEN\" ? greenDur : yellowDur; // Get its duration\n\n    // Sequence: RED -> GREEN -> YELLOW -> RED\n    if (state === \"RED\") {\n        state = \"GREEN\";\n        timer = greenDur * 10;\n    } else if (state === \"GREEN\") {\n        state = \"YELLOW\";\n        timer = yellowDur * 10;\n    } else if (state === \"YELLOW\") {\n        state = \"RED\";\n        timer = redDur * 10;\n    }\n\n    // 5. DATABASE LOGGING - logs prevLight and its actual duration\n    dbMsg = {\n        payload: {},\n        params: [prevLight, prevDuration]\n    };\n}\n\n// Save context\ncontext.set('state', state);\ncontext.set('timer', timer);\n\n// 6. PREPARE OUTPUTS\n// ... [Existing countdown and transition logic] ...\nlet modbusLights = {\n    payload: [state === \"GREEN\", state === \"YELLOW\", state === \"RED\"]\n};\n\nlet modbusTimer = {\n    payload: Math.ceil(timer / 10)\n};\n\nlet activeColor = state;\nlet countdownVal = Math.ceil(timer / 10);\n\n// SVG DATA - This object drives the Binding tab\nlet uiUpdate = {\n    payload: activeColor,\n    countdown: String(countdownVal).padStart(2, '0'),\n    redFill: (activeColor === \"RED\") ? \"#FF0000\" : \"#440000\",\n    yellowFill: (activeColor === \"YELLOW\") ? \"#FFFF00\" : \"#444400\",\n    greenFill: (activeColor === \"GREEN\") ? \"#00FF00\" : \"#004400\",\n    textColor: (activeColor === \"RED\") ? \"#FF0000\" : \n               (activeColor === \"YELLOW\") ? \"#FFFF00\" : \"#00FF00\"\n};\n\n// Routing to 4 outputs: Modbus Lights, Modbus Timer, SVG Visual, DB Log\nif (dbMsg) {\n    node.send([modbusLights, modbusTimer, uiUpdate, dbMsg]);\n} else {\n    node.send([modbusLights, modbusTimer, uiUpdate, null]);\n}\nreturn null;",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 280,
+        "wires": [
+            [
+                "8898ce8b3bfbc3e8"
+            ],
+            [
+                "adedc03a857ed6e4"
+            ],
+            [
+                "941ceced24570657",
+                "0c6efc24303fb264"
+            ],
+            [
+                "02753f5acc89c461"
+            ]
+        ]
+    },
+    {
+        "id": "8898ce8b3bfbc3e8",
+        "type": "modbus-write",
+        "z": "c0f40a06e4cbcccd",
+        "name": "light controller",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "MCoils",
+        "adr": "0",
+        "quantity": "3",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 760,
+        "y": 100,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "adedc03a857ed6e4",
+        "type": "modbus-write",
+        "z": "c0f40a06e4cbcccd",
+        "name": "timer display",
+        "showStatusActivities": false,
+        "showErrors": false,
+        "showWarnings": true,
+        "unitid": "",
+        "dataType": "HoldingRegister",
+        "adr": "0",
+        "quantity": "1",
+        "server": "1e8a38970daaca83",
+        "emptyMsgOnFail": false,
+        "keepMsgProperties": false,
+        "delayOnStart": false,
+        "startDelayTime": "",
+        "x": 750,
+        "y": 160,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "d757493aa0c332c8",
+        "type": "inject",
+        "z": "c0f40a06e4cbcccd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "0.1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 350,
+        "y": 280,
+        "wires": [
+            [
+                "4d1437723ed8ce5d"
+            ]
+        ]
+    },
+    {
+        "id": "02753f5acc89c461",
+        "type": "postgresql",
+        "z": "c0f40a06e4cbcccd",
+        "name": "traffic log",
+        "query": "INSERT INTO traffic_logs (light_color, duration_sec, log_time) VALUES ($1, $2, NOW())",
+        "postgreSQLConfig": "470de481d6c1f358",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 720,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5f9d27866ac62a9d",
+        "type": "postgresql",
+        "z": "c0f40a06e4cbcccd",
+        "name": "fetch data",
+        "query": "SELECT light_color, SUM(duration_sec) as total_duration,\n       (SELECT COUNT(*) / 3 FROM traffic_logs) AS total_cycles\nFROM traffic_logs\nGROUP BY light_color",
+        "postgreSQLConfig": "470de481d6c1f358",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 520,
+        "y": 460,
+        "wires": [
+            [
+                "d5cc513ee123c75b"
+            ]
+        ]
+    },
+    {
+        "id": "4964ef0ddbd0872f",
+        "type": "inject",
+        "z": "c0f40a06e4cbcccd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "4",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 370,
+        "y": 460,
+        "wires": [
+            [
+                "5f9d27866ac62a9d"
+            ]
+        ]
+    },
+    {
+        "id": "d5cc513ee123c75b",
+        "type": "function",
+        "z": "c0f40a06e4cbcccd",
+        "name": "split data",
+        "func": "let order = [\"RED\", \"YELLOW\", \"GREEN\"];\nlet dataMap = {};\n\nmsg.payload.forEach(row => {\n    dataMap[row.light_color] = Number(row.total_duration);\n});\n\nlet labels = order;\nlet values = order.map(color => dataMap[color] || 0);\n\nlet chartMsg = {\n    topic: \"replace\",\n    payload: [{\n        \"series\": [\"Total Duration (Seconds)\"],\n        \"data\": [values],\n        \"labels\": labels\n    }]\n};\n\nlet totalCycles = msg.payload.length > 0 ? msg.payload[0].total_cycles : 0;\nlet totalMsg = { payload: String(totalCycles) };\n\nreturn [chartMsg, totalMsg];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 460,
+        "wires": [
+            [
+                "0b6a09fd48ab1c7d"
+            ],
+            [
+                "c0038c2b4b95ffd2"
+            ]
+        ]
+    },
+    {
+        "id": "0b6a09fd48ab1c7d",
+        "type": "ui_chart",
+        "z": "c0f40a06e4cbcccd",
+        "name": "",
+        "group": "ad94758a49ea89e3",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Cycle History",
+        "chartType": "bar",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ff0000",
+            "#ffff00",
+            "#00cc00",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 850,
+        "y": 440,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "c0038c2b4b95ffd2",
+        "type": "ui_text",
+        "z": "c0f40a06e4cbcccd",
+        "group": "ad94758a49ea89e3",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Total Cycle Count: ",
+        "format": "{{msg.payload}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 870,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "941ceced24570657",
+        "type": "debug",
+        "z": "c0f40a06e4cbcccd",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 800,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "0c6efc24303fb264",
+        "type": "ui_template",
+        "z": "c0f40a06e4cbcccd",
+        "group": "8b7fde5312977b5f",
+        "name": "visual2",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "format": "<div style=\"display:flex; justify-content:center; align-items:center; gap:20px; padding:20px;\">\n\n    <!-- Traffic Light -->\n    <div\n        style=\"background:dimgray; padding:15px; border-radius:10px; display:flex; flex-direction:column; align-items:center; gap:10px;\">\n        <div id=\"redlite\"\n            style=\"width:80px; height:80px; border-radius:50%; background:#440000; border:2px solid black; transition: background 0.3s ease;\">\n        </div>\n        <div id=\"yellowlite\"\n            style=\"width:80px; height:80px; border-radius:50%; background:#444400; border:2px solid black; transition: background 0.3s ease;\">\n        </div>\n        <div id=\"greenlite\"\n            style=\"width:80px; height:80px; border-radius:50%; background:#004400; border:2px solid black; transition: background 0.3s ease;\">\n        </div>\n    </div>\n\n    <!-- Countdown Timer -->\n    <div style=\"background:dimgray; padding:20px; border-radius:10px;\">\n        <span id=\"texttimer\" style=\"font-family:Arial Black; font-size:80px; color:red;\">00</span>\n    </div>\n\n</div>\n\n<script>\n    (function() {\n    scope.$watch('msg', function(msg) {\n        if (!msg) return;\n        \n        document.getElementById(\"redlite\").style.background = msg.redFill;\n        document.getElementById(\"yellowlite\").style.background = msg.yellowFill;\n        document.getElementById(\"greenlite\").style.background = msg.greenFill;\n        document.getElementById(\"texttimer\").style.color = msg.textColor;\n        document.getElementById(\"texttimer\").textContent = msg.countdown;\n    });\n})();\n</script>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 800,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1e8a38970daaca83",
+        "type": "modbus-client",
+        "name": "FACTORY IO HOME",
+        "clienttype": "tcp",
+        "bufferCommands": true,
+        "stateLogEnabled": false,
+        "queueLogEnabled": false,
+        "failureLogEnabled": true,
+        "tcpHost": "192.168.254.112",
+        "tcpPort": 502,
+        "tcpType": "DEFAULT",
+        "serialPort": "/dev/ttyUSB",
+        "serialType": "RTU-BUFFERD",
+        "serialBaudrate": 9600,
+        "serialDatabits": 8,
+        "serialStopbits": 1,
+        "serialParity": "none",
+        "serialConnectionDelay": 100,
+        "serialAsciiResponseStartDelimiter": "0x3A",
+        "unit_id": 1,
+        "commandDelay": 1,
+        "clientTimeout": 100,
+        "reconnectOnTimeout": true,
+        "reconnectTimeout": 2000,
+        "parallelUnitIdsAllowed": true,
+        "showErrors": false,
+        "showWarnings": true,
+        "showLogs": true
+    },
+    {
+        "id": "470de481d6c1f358",
+        "type": "postgreSQLConfig",
+        "name": "traffic_control",
+        "host": "127.0.0.1",
+        "hostFieldType": "str",
+        "port": 5432,
+        "portFieldType": "num",
+        "database": "traffic_control",
+        "databaseFieldType": "str",
+        "ssl": "false",
+        "sslFieldType": "bool",
+        "applicationName": "",
+        "applicationNameType": "str",
+        "max": 10,
+        "maxFieldType": "num",
+        "idle": 1000,
+        "idleFieldType": "num",
+        "connectionTimeout": 10000,
+        "connectionTimeoutFieldType": "num",
+        "user": "postgres",
+        "userFieldType": "str",
+        "password": "54543210a",
+        "passwordFieldType": "str"
+    },
+    {
+        "id": "ad94758a49ea89e3",
+        "type": "ui_group",
+        "name": "Traffic Light Interface",
+        "tab": "05d33fa372839f50",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "8b7fde5312977b5f",
+        "type": "ui_group",
+        "name": "Traffic Light Visual",
+        "tab": "05d33fa372839f50",
+        "order": 2,
+        "disp": true,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "05d33fa372839f50",
+        "type": "ui_tab",
+        "name": "Traffic Light Demo",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "15822e0a9753b4d3",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-modbus": "5.45.2",
+            "node-red-contrib-postgresql": "0.15.4",
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
