@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Traffic Light 3D</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Bebas+Neue&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0f;
+    overflow: hidden;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  #canvas-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  canvas { display: block; }
+
+  /* HUD Overlay */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Corner scan lines */
+  #hud::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,150,0.015) 2px,
+      rgba(0,255,150,0.015) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* Top bar */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(0,0,0,0.7);
+    border-bottom: 1px solid rgba(0,255,150,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    backdrop-filter: blur(8px);
+  }
+
+  #topbar .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 6px;
+    color: #00ff96;
+    text-shadow: 0 0 20px rgba(0,255,150,0.5);
+  }
+
+  #topbar .status-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  #ws-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  #ws-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ff4444;
+    box-shadow: 0 0 8px #ff4444;
+    transition: all 0.3s;
+  }
+  #ws-dot.connected { background: #00ff96; box-shadow: 0 0 8px #00ff96; }
+
+  #ws-label { color: rgba(255,255,255,0.5); }
+
+  /* Timer display removed — rendered in Three.js */
+
+  /* State badge */
+  #state-badge {
+    position: fixed;
+    top: 72px;
+    right: 32px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    letter-spacing: 6px;
+    color: #ff3333;
+    text-shadow: 0 0 30px currentColor;
+    transition: color 0.4s, text-shadow 0.4s;
+    text-align: right;
+  }
+  #state-badge.green  { color: #00ff66; text-shadow: 0 0 30px #00ff66; }
+  #state-badge.yellow { color: #ffee00; text-shadow: 0 0 30px #ffee00; }
+  #state-badge.red    { color: #ff3333; text-shadow: 0 0 30px #ff3333; }
+
+  /* WS config panel */
+  #ws-config {
+    position: fixed;
+    bottom: 20px;
+    right: 32px;
+    pointer-events: all;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  #ws-url-input {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(0,255,150,0.3);
+    color: #00ff96;
+    padding: 6px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    width: 260px;
+    outline: none;
+    border-radius: 2px;
+  }
+  #ws-url-input:focus { border-color: rgba(0,255,150,0.7); }
+
+  #ws-connect-btn {
+    background: rgba(0,255,150,0.1);
+    border: 1px solid rgba(0,255,150,0.4);
+    color: #00ff96;
+    padding: 6px 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+  }
+  #ws-connect-btn:hover {
+    background: rgba(0,255,150,0.2);
+    border-color: rgba(0,255,150,0.7);
+  }
+
+  /* Corner brackets */
+  .corner {
+    position: fixed;
+    width: 32px; height: 32px;
+    pointer-events: none;
+  }
+  .corner.tl { top: 64px; left: 16px; border-top: 1px solid rgba(0,255,150,0.4); border-left: 1px solid rgba(0,255,150,0.4); }
+  .corner.tr { top: 64px; right: 16px; border-top: 1px solid rgba(0,255,150,0.4); border-right: 1px solid rgba(0,255,150,0.4); }
+  .corner.bl { bottom: 16px; left: 16px; border-bottom: 1px solid rgba(0,255,150,0.4); border-left: 1px solid rgba(0,255,150,0.4); }
+  .corner.br { bottom: 16px; right: 16px; border-bottom: 1px solid rgba(0,255,150,0.4); border-right: 1px solid rgba(0,255,150,0.4); }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="hud">
+  <div id="topbar">
+    <div class="title">TRAFFIC CONTROL · 3D</div>
+    <div class="status-row">
+      <div id="ws-status">
+        <div id="ws-dot"></div>
+        <span id="ws-label">DISCONNECTED</span>
+      </div>
+      <span style="color:rgba(255,255,255,0.2)">|</span>
+      <span>NODE-RED BRIDGE</span>
+    </div>
+  </div>
+
+  <div id="state-badge" class="red">RED</div>
+
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+</div>
+
+<!-- WS config outside hud so pointer-events work -->
+<div id="ws-config">
+  <input id="ws-url-input" type="text" value="ws://localhost:1880/ws/trafficlight" placeholder="ws://host:1880/ws/..." />
+  <button id="ws-connect-btn">CONNECT</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ──────────────────────────────────────────────
+// SCENE SETUP
+// ──────────────────────────────────────────────
+const container = document.getElementById('canvas-container');
+const W = window.innerWidth, H = window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0f);
+scene.fog = new THREE.FogExp2(0x0a0a0f, 0.045);
+
+const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 200);
+camera.position.set(0, 2.5, 11);
+camera.lookAt(0, 2, 0);
+
+// ──────────────────────────────────────────────
+// LIGHTS
+// ──────────────────────────────────────────────
+const ambientLight = new THREE.AmbientLight(0x223344, 3);
+scene.add(ambientLight);
+
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+dirLight.position.set(5, 10, 5);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.set(2048, 2048);
+scene.add(dirLight);
+
+// Traffic light glow lights (point lights per bulb)
+const redPointLight   = new THREE.PointLight(0xff2200, 0, 4);
+const yellowPointLight = new THREE.PointLight(0xffee00, 0, 4);
+const greenPointLight  = new THREE.PointLight(0x00ff44, 0, 4);
+redPointLight.position.set(0, 4.6, 1.2);
+yellowPointLight.position.set(0, 3.2, 1.2);
+greenPointLight.position.set(0, 1.8, 1.2);
+scene.add(redPointLight, yellowPointLight, greenPointLight);
+
+// ──────────────────────────────────────────────
+// MATERIALS
+// ──────────────────────────────────────────────
+const housingMat = new THREE.MeshStandardMaterial({
+  color: 0x1a1a1a,
+  roughness: 0.4,
+  metalness: 0.8,
+});
+
+const poleMat = new THREE.MeshStandardMaterial({
+  color: 0x222228,
+  roughness: 0.5,
+  metalness: 0.9,
+});
+
+// Bulb materials — created per bulb
+function makeBulbMat(color, emissive, emissiveIntensity) {
+  return new THREE.MeshStandardMaterial({
+    color: color,
+    emissive: emissive,
+    emissiveIntensity: emissiveIntensity,
+    roughness: 0.1,
+    metalness: 0.0,
+  });
+}
+
+// ──────────────────────────────────────────────
+// GEOMETRY HELPERS
+// ──────────────────────────────────────────────
+function roundedBox(w, h, d, r, segs = 4) {
+  // Approximation using BoxGeometry (Three r128 has no built-in RoundedBoxGeometry)
+  // We'll fake rounded corners with a slightly tapered shape
+  return new THREE.BoxGeometry(w, h, d);
+}
+
+// ──────────────────────────────────────────────
+// BUILD TRAFFIC LIGHT
+// ──────────────────────────────────────────────
+const lightGroup = new THREE.Group();
+scene.add(lightGroup);
+
+// --- Pole ---
+const poleGeo = new THREE.CylinderGeometry(0.08, 0.10, 8, 16);
+const pole = new THREE.Mesh(poleGeo, poleMat);
+pole.position.y = -0.5;
+pole.castShadow = true;
+lightGroup.add(pole);
+
+// Base plate
+const baseGeo = new THREE.CylinderGeometry(0.5, 0.6, 0.18, 24);
+const base = new THREE.Mesh(baseGeo, poleMat);
+base.position.y = -4.4;
+base.castShadow = true;
+base.receiveShadow = true;
+lightGroup.add(base);
+
+// --- Housing body ---
+const housingGeo = new THREE.BoxGeometry(1.6, 4.2, 1.4);
+const housing = new THREE.Mesh(housingGeo, housingMat);
+housing.position.y = 3.1;
+housing.castShadow = true;
+lightGroup.add(housing);
+
+// Housing top cap (rounded feel)
+const capGeo = new THREE.CylinderGeometry(0.78, 0.80, 0.3, 20);
+const cap = new THREE.Mesh(capGeo, housingMat);
+cap.position.y = 5.35;
+lightGroup.add(cap);
+
+// Housing bottom cap
+const capBot = new THREE.Mesh(capGeo.clone(), housingMat);
+capBot.position.y = 0.9;
+lightGroup.add(capBot);
+
+// --- Visor strips (per light) ---
+function makeVisor(yPos) {
+  const visorGeo = new THREE.BoxGeometry(1.66, 0.18, 0.9);
+  const visorMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.7 });
+  const visor = new THREE.Mesh(visorGeo, visorMat);
+  visor.position.set(0, yPos, 0.25);
+  lightGroup.add(visor);
+}
+makeVisor(4.6 + 0.62);
+makeVisor(3.2 + 0.62);
+makeVisor(1.8 + 0.62);
+
+// --- Lens / Bulb circles ---
+const bulbRadius = 0.48;
+const bulbGeo = new THREE.CircleGeometry(bulbRadius, 48);
+const lensDepthGeo = new THREE.CylinderGeometry(bulbRadius, bulbRadius, 0.14, 48);
+lensDepthGeo.rotateX(Math.PI / 2);
+
+// Rim rings
+function makeRim(yPos) {
+  const ringGeo = new THREE.TorusGeometry(bulbRadius + 0.04, 0.04, 12, 48);
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 0.2, metalness: 0.9 });
+  const ring = new THREE.Mesh(ringGeo, rimMat);
+  ring.position.set(0, yPos, 0.71);
+  lightGroup.add(ring);
+}
+makeRim(4.6); makeRim(3.2); makeRim(1.8);
+
+// Create actual bulb meshes
+const redBulbMat    = makeBulbMat(0x330000, new THREE.Color(1, 0, 0), 0.0);
+const yellowBulbMat = makeBulbMat(0x333300, new THREE.Color(1, 0.9, 0), 0.0);
+const greenBulbMat  = makeBulbMat(0x003300, new THREE.Color(0, 1, 0.2), 0.0);
+
+function makeLens(mat, yPos) {
+  const geo = new THREE.SphereGeometry(bulbRadius - 0.02, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.x = Math.PI / 2;
+  mesh.position.set(0, yPos, 0.72);
+  lightGroup.add(mesh);
+
+  // Flat backing
+  const back = new THREE.Mesh(
+    new THREE.CircleGeometry(bulbRadius - 0.02, 32),
+    mat
+  );
+  back.position.set(0, yPos, 0.72);
+  lightGroup.add(back);
+
+  return mesh;
+}
+
+const redLens    = makeLens(redBulbMat, 4.6);
+const yellowLens = makeLens(yellowBulbMat, 3.2);
+const greenLens  = makeLens(greenBulbMat, 1.8);
+
+// Shine overlay (specular highlight circle)
+function makeShine(yPos) {
+  const shineGeo = new THREE.CircleGeometry(0.12, 24);
+  const shineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 });
+  const shine = new THREE.Mesh(shineGeo, shineMat);
+  shine.position.set(-0.14, yPos + 0.14, 0.99);
+  lightGroup.add(shine);
+}
+makeShine(4.6); makeShine(3.2); makeShine(1.8);
+
+// ──────────────────────────────────────────────
+// GROUND PLANE
+// ──────────────────────────────────────────────
+const groundGeo = new THREE.PlaneGeometry(60, 60);
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x0d0d12,
+  roughness: 0.9,
+  metalness: 0.1,
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -4.52;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Road markings
+function makeLine(x, z, w, h) {
+  const geo = new THREE.PlaneGeometry(w, h);
+  const mat = new THREE.MeshBasicMaterial({ color: 0x333340, transparent: true, opacity: 0.6 });
+  const m = new THREE.Mesh(geo, mat);
+  m.rotation.x = -Math.PI / 2;
+  m.position.set(x, -4.50, z);
+  scene.add(m);
+}
+// Crosswalk stripes
+for (let i = -4; i <= 4; i += 1.2) {
+  makeLine(i, 4, 0.7, 3.5);
+}
+// Center road line
+for (let z = -20; z < 20; z += 2.5) {
+  makeLine(0, z, 0.12, 1.5);
+}
+
+// ──────────────────────────────────────────────
+// BACKGROUND CITY SILHOUETTES (simple boxes)
+// ──────────────────────────────────────────────
+const cityMat = new THREE.MeshStandardMaterial({ color: 0x0e0e18, roughness: 1 });
+const buildingData = [
+  [-8, 3, -12], [-5.5, 5, -13], [-3, 2, -11],
+  [3, 4, -12], [6, 6, -14], [9, 3, -11],
+  [-11, 2, -10], [11, 4, -10],
+];
+buildingData.forEach(([x, h, z]) => {
+  const bGeo = new THREE.BoxGeometry(1.8 + Math.random(), h, 1.8 + Math.random());
+  const b = new THREE.Mesh(bGeo, cityMat);
+  b.position.set(x, -4.52 + h / 2, z);
+  scene.add(b);
+
+  // Window grid glow
+  const winMat = new THREE.MeshBasicMaterial({ color: 0x2233ff, transparent: true, opacity: 0.15 + Math.random() * 0.1 });
+  const winGeo = new THREE.PlaneGeometry(1.6, h - 0.4);
+  const win = new THREE.Mesh(winGeo, winMat);
+  win.position.set(x, -4.52 + h / 2, z + 0.92);
+  scene.add(win);
+});
+
+// ──────────────────────────────────────────────
+// PARTICLE SYSTEM (atmospheric dust)
+// ──────────────────────────────────────────────
+const particleCount = 400;
+const pPositions = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount; i++) {
+  pPositions[i * 3]     = (Math.random() - 0.5) * 20;
+  pPositions[i * 3 + 1] = Math.random() * 12 - 4;
+  pPositions[i * 3 + 2] = (Math.random() - 0.5) * 16;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+const pMat = new THREE.PointsMaterial({ color: 0x334455, size: 0.04, transparent: true, opacity: 0.6 });
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+// ──────────────────────────────────────────────
+// 7-SEGMENT DISPLAY (Three.js geometry)
+// ──────────────────────────────────────────────
+//
+//   aaa
+//  f   b
+//  f   b
+//   ggg
+//  e   c
+//  e   c
+//   ddd
+//
+// Segment on/off per digit 0-9  [a,b,c,d,e,f,g]
+const SEG_MAP = {
+  0:[1,1,1,1,1,1,0], 1:[0,1,1,0,0,0,0], 2:[1,1,0,1,1,0,1],
+  3:[1,1,1,1,0,0,1], 4:[0,1,1,0,0,1,1], 5:[1,0,1,1,0,1,1],
+  6:[1,0,1,1,1,1,1], 7:[1,1,1,0,0,0,0], 8:[1,1,1,1,1,1,1],
+  9:[1,1,1,1,0,1,1],
+};
+
+// Dimensions
+const S_LEN  = 0.44;  // segment long-axis length
+const S_THK  = 0.09;  // segment thickness
+const S_DEP  = 0.05;  // extrusion depth
+const S_GAP  = 0.025; // gap between segments
+
+// Digit bounding box
+const D_W = S_LEN + S_THK + S_GAP * 2;
+const D_H = S_LEN * 2 + S_THK * 3 + S_GAP * 4;
+
+// Half-lengths for positioning
+const hL = S_LEN / 2;
+const hT = S_THK / 2;
+
+// Segment center positions [x, y, isHoriz]:
+// y=0 at digit center
+const yTop =  hL + hT + S_GAP;
+const yMid =  0;
+const yBot = -(hL + hT + S_GAP);
+const xR   =  hL + hT / 2 + S_GAP;
+const xL   = -(hL + hT / 2 + S_GAP);
+const yTV  =  hL / 2 + hT + S_GAP * 0.5;  // vertical top-half center
+const yBV  = -(hL / 2 + hT + S_GAP * 0.5); // vertical bot-half center
+
+// [x, y, isHorizontal] — order: a b c d e f g
+const SEG_DEFS = [
+  [0,   yTop, true ],  // a – top horiz
+  [xR,  yTV,  false],  // b – top-right vert
+  [xR,  yBV,  false],  // c – bot-right vert
+  [0,   yBot, true ],  // d – bottom horiz
+  [xL,  yBV,  false],  // e – bot-left vert
+  [xL,  yTV,  false],  // f – top-left vert
+  [0,   yMid, true ],  // g – middle horiz
+];
+
+// Simple box segments — reliable across all Three.js versions
+// Horizontal segment: wide on X, thin on Y
+// Vertical segment:   thin on X, tall on Y
+// S_DEP is the box depth (Z axis, pointing toward camera)
+const hGeo = new THREE.BoxGeometry(S_LEN, S_THK, S_DEP);
+const vGeo = new THREE.BoxGeometry(S_THK, S_LEN, S_DEP);
+
+// Colors per traffic state
+const STATE_COLORS = {
+  RED:    { on: new THREE.Color(1.0, 0.06, 0.06), off: new THREE.Color(0.10, 0.01, 0.01) },
+  YELLOW: { on: new THREE.Color(1.0, 0.90, 0.0),  off: new THREE.Color(0.10, 0.09, 0.0)  },
+  GREEN:  { on: new THREE.Color(0.0, 1.0,  0.12), off: new THREE.Color(0.0,  0.10, 0.02) },
+};
+
+// ── PANEL HOUSING ──
+const PANEL_PAD   = 0.20;
+const DIGIT_SP    = 0.20; // spacing between digit columns
+const NUM_DIGITS  = 2;
+const panelW = NUM_DIGITS * D_W + (NUM_DIGITS - 1) * DIGIT_SP + PANEL_PAD * 2;
+const panelH = D_H + PANEL_PAD * 2;
+const panelD = 0.18;
+
+const sevenSegGroup = new THREE.Group();
+scene.add(sevenSegGroup);
+
+// Black housing slab
+const panelMat7 = new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.6, metalness: 0.5 });
+const panelBox  = new THREE.Mesh(new THREE.BoxGeometry(panelW, panelH, panelD), panelMat7);
+sevenSegGroup.add(panelBox);
+
+// Top visor lip (shade from above, like real boards)
+const visorLip = new THREE.Mesh(
+  new THREE.BoxGeometry(panelW + 0.06, 0.07, panelD + 0.18),
+  panelMat7
+);
+visorLip.position.set(0, panelH / 2 + 0.035, 0.09);
+sevenSegGroup.add(visorLip);
+
+// Side lips
+[-1, 1].forEach(s => {
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(0.06, panelH + 0.07, panelD + 0.18), panelMat7);
+  lip.position.set(s * (panelW / 2 + 0.03), 0, 0.09);
+  sevenSegGroup.add(lip);
+});
+
+// ── BUILD DIGITS ──
+// Each digit group holds 7 segment meshes
+const digits = [];
+const totalDW = NUM_DIGITS * D_W + (NUM_DIGITS - 1) * DIGIT_SP;
+
+for (let di = 0; di < NUM_DIGITS; di++) {
+  const digitX = -totalDW / 2 + D_W / 2 + di * (D_W + DIGIT_SP);
+  const segMeshes = [];
+
+  SEG_DEFS.forEach(([sx, sy, isHoriz]) => {
+    const mat = new THREE.MeshStandardMaterial({
+      color:             new THREE.Color(0.10, 0.01, 0.01),
+      emissive:          new THREE.Color(0, 0, 0),
+      emissiveIntensity: 0,
+      roughness: 0.25,
+      metalness: 0.05,
+    });
+    const mesh = new THREE.Mesh(isHoriz ? hGeo : vGeo, mat);
+    // ExtrudeGeometry extrudes along +Z. The flat shape face IS the front face.
+    // Place segments so they sit proud of the panel front face.
+    // panelD/2 = front face of panel box. Shift forward by S_DEP so segments float in front.
+    mesh.position.set(digitX + sx, sy, panelD / 2);
+    sevenSegGroup.add(mesh);
+    segMeshes.push(mesh);
+  });
+
+  digits.push({ segMeshes });
+}
+
+// ── MOUNTING ARM ──
+const armMat7 = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5, metalness: 0.8 });
+// Horizontal arm from right edge of panel to traffic light housing
+const armLength = 1.6;
+const armMesh = new THREE.Mesh(new THREE.BoxGeometry(armLength, 0.09, 0.09), armMat7);
+armMesh.position.set(panelW / 2 + armLength / 2, 0, 0);
+sevenSegGroup.add(armMesh);
+
+// Position the whole panel: left side of traffic light, same height as middle bulb
+sevenSegGroup.position.set(-3.0, 3.2, 0);
+
+// Glow point light in front of panel
+const segGlowLight = new THREE.PointLight(0xff2200, 2.0, 4.0);
+segGlowLight.position.set(-3.0, 3.2, 1.2);
+scene.add(segGlowLight);
+
+// ──────────────────────────────────────────────
+// UPDATE SEGMENTS
+// ──────────────────────────────────────────────
+let seg_currentState = 'RED';
+let seg_targetIntensity = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; // 7*2 segments
+let seg_currentIntensity = new Array(14).fill(0);
+
+function updateSegments(value, state) {
+  const str = String(Math.max(0, Math.min(99, parseInt(value) || 0))).padStart(2, '0');
+  const colors = STATE_COLORS[state] || STATE_COLORS.RED;
+
+  digits.forEach((digit, di) => {
+    const num = parseInt(str[di]);
+    const map = SEG_MAP[num !== undefined ? num : 8];
+    digit.segMeshes.forEach((mesh, si) => {
+      const on = map[si] === 1;
+      mesh.material.color.copy(on ? colors.on : colors.off);
+      mesh.material.emissive.copy(on ? colors.on : new THREE.Color(0, 0, 0));
+      mesh.material.emissiveIntensity = on ? 2.5 : 0;
+    });
+  });
+
+  // Glow light color & intensity
+  if (state === 'RED')    segGlowLight.color.setHex(0xff1100);
+  if (state === 'YELLOW') segGlowLight.color.setHex(0xffee00);
+  if (state === 'GREEN')  segGlowLight.color.setHex(0x00ff44);
+}
+
+// ──────────────────────────────────────────────
+// STATE MANAGEMENT
+// ──────────────────────────────────────────────
+let currentState = 'RED';
+let currentCountdown = 10;
+let targetLightIntensity = { red: 0, yellow: 0, green: 0 };
+let currentLightIntensity = { red: 0, yellow: 0, green: 0 };
+
+// DOM refs
+const stateBadge  = document.getElementById('state-badge');
+const wsDot       = document.getElementById('ws-dot');
+const wsLabel     = document.getElementById('ws-label');
+
+function applyState(state, countdown) {
+  currentState    = state.toUpperCase();
+  currentCountdown = parseInt(countdown) || 0;
+
+  // Update DOM state badge
+  stateBadge.textContent = currentState;
+  stateBadge.className   = currentState.toLowerCase();
+
+  // Update 3D 7-segment
+  updateSegments(currentCountdown, currentState);
+
+  // Target intensities
+  targetLightIntensity.red    = currentState === 'RED'    ? 1 : 0;
+  targetLightIntensity.yellow = currentState === 'YELLOW' ? 1 : 0;
+  targetLightIntensity.green  = currentState === 'GREEN'  ? 1 : 0;
+}
+
+// Demo cycle (runs when no WS)
+let demoTimer = null;
+const DEMO_STATES = [
+  { state: 'RED',    dur: 10 },
+  { state: 'GREEN',  dur: 8  },
+  { state: 'YELLOW', dur: 3  },
+];
+let demoIdx = 0, demoCountdown = 10;
+
+function startDemo() {
+  if (demoTimer) clearInterval(demoTimer);
+  demoIdx = 0; demoCountdown = DEMO_STATES[0].dur;
+  applyState(DEMO_STATES[0].state, demoCountdown);
+
+  demoTimer = setInterval(() => {
+    demoCountdown--;
+    if (demoCountdown <= 0) {
+      demoIdx = (demoIdx + 1) % DEMO_STATES.length;
+      demoCountdown = DEMO_STATES[demoIdx].dur;
+    }
+    applyState(DEMO_STATES[demoIdx].state, demoCountdown);
+  }, 1000);
+}
+startDemo(); // start immediately as fallback
+
+// ──────────────────────────────────────────────
+// WEBSOCKET
+// ──────────────────────────────────────────────
+let ws = null;
+
+function connectWS(url) {
+  if (ws) { try { ws.close(); } catch(e){} }
+  try {
+    ws = new WebSocket(url);
+
+    ws.onopen = () => {
+      wsDot.classList.add('connected');
+      wsLabel.textContent = 'CONNECTED';
+      if (demoTimer) { clearInterval(demoTimer); demoTimer = null; }
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        console.log('WS raw:', JSON.stringify(msg));
+
+        // Node-RED uiUpdate: { payload:"RED", countdown:"08", redFill, yellowFill, greenFill }
+        // payload is the state string; countdown is the timer number/string
+        let state    = currentState;
+        let countdown = currentCountdown;
+
+        // Extract state from payload field
+        if (typeof msg.payload === 'string') {
+          const p = msg.payload.toUpperCase();
+          if (p === 'RED' || p === 'GREEN' || p === 'YELLOW') state = p;
+        }
+
+        // Extract countdown — could be string "08" or number 8
+        if (msg.countdown !== undefined && msg.countdown !== null) {
+          const n = parseInt(msg.countdown);
+          if (!isNaN(n)) countdown = n;
+        }
+
+        applyState(state, countdown);
+      } catch(e) {
+        console.warn('WS parse error', e, evt.data);
+      }
+    };
+
+    ws.onclose = () => {
+      wsDot.classList.remove('connected');
+      wsLabel.textContent = 'DISCONNECTED';
+      ws = null;
+      startDemo(); // fall back to demo
+    };
+
+    ws.onerror = (e) => {
+      console.warn('WS error', e);
+    };
+  } catch(e) {
+    console.warn('WS connect failed', e);
+    startDemo();
+  }
+}
+
+document.getElementById('ws-connect-btn').addEventListener('click', () => {
+  const url = document.getElementById('ws-url-input').value.trim();
+  if (url) connectWS(url);
+});
+
+// ──────────────────────────────────────────────
+// ANIMATION LOOP
+// ──────────────────────────────────────────────
+const clock = new THREE.Clock();
+
+// Smooth lerp helper
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+function animate() {
+  requestAnimationFrame(animate);
+  const elapsed = clock.getElapsedTime();
+  const delta   = clock.getDelta ? 0.016 : 0.016; // safe default
+
+  // --- Smooth bulb intensity ---
+  const lerpSpeed = 0.08;
+  currentLightIntensity.red    = lerp(currentLightIntensity.red,    targetLightIntensity.red,    lerpSpeed);
+  currentLightIntensity.yellow = lerp(currentLightIntensity.yellow, targetLightIntensity.yellow, lerpSpeed);
+  currentLightIntensity.green  = lerp(currentLightIntensity.green,  targetLightIntensity.green,  lerpSpeed);
+
+  // Apply to materials
+  redBulbMat.emissiveIntensity    = currentLightIntensity.red    * 3.0;
+  yellowBulbMat.emissiveIntensity = currentLightIntensity.yellow * 3.0;
+  greenBulbMat.emissiveIntensity  = currentLightIntensity.green  * 3.0;
+
+  redBulbMat.color.setRGB(
+    0.2 + currentLightIntensity.red * 0.8,
+    0.02,
+    0.02
+  );
+  yellowBulbMat.color.setRGB(
+    0.2 + currentLightIntensity.yellow * 0.8,
+    0.2 + currentLightIntensity.yellow * 0.7,
+    0.0
+  );
+  greenBulbMat.color.setRGB(
+    0.02,
+    0.2 + currentLightIntensity.green * 0.8,
+    0.04
+  );
+
+  // Apply to point lights
+  redPointLight.intensity    = currentLightIntensity.red    * 6.0;
+  yellowPointLight.intensity = currentLightIntensity.yellow * 5.0;
+  greenPointLight.intensity  = currentLightIntensity.green  * 6.0;
+
+  // 7-seg glow pulse
+  segGlowLight.intensity = 1.5 + Math.sin(elapsed * 3.0) * 0.3;
+
+  // Gentle idle bob
+  lightGroup.position.y    = Math.sin(elapsed * 0.4) * 0.03;
+  lightGroup.rotation.y    = Math.sin(elapsed * 0.2) * 0.008;
+
+  // Slow camera drift
+  camera.position.x = Math.sin(elapsed * 0.12) * 0.6;
+  camera.position.y = 2.5 + Math.sin(elapsed * 0.18) * 0.2;
+  camera.lookAt(0, 2.5, 0);
+
+  // Particle drift
+  const pos = particles.geometry.attributes.position.array;
+  for (let i = 0; i < particleCount; i++) {
+    pos[i * 3 + 1] += 0.003;
+    if (pos[i * 3 + 1] > 8) pos[i * 3 + 1] = -4;
+  }
+  particles.geometry.attributes.position.needsUpdate = true;
+
+  renderer.render(scene, camera);
+}
+
+clock.getDelta(); // init
+animate();
+
+// ──────────────────────────────────────────────
+// RESIZE
+// ──────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+});
+</script>
+</body>
+</html>
