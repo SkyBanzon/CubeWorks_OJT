@@ -18,7 +18,7 @@
         "delayOnStart": false,
         "enableDeformedMessages": false,
         "startDelayTime": "",
-        "server": "3bf26672a55906c8",
+        "server": "181499f8d5ee5473",
         "useIOFile": false,
         "ioFile": "",
         "useIOForPayload": false,
@@ -166,7 +166,7 @@
         "delayOnStart": false,
         "enableDeformedMessages": false,
         "startDelayTime": "",
-        "server": "3bf26672a55906c8",
+        "server": "181499f8d5ee5473",
         "useIOFile": false,
         "ioFile": "",
         "useIOForPayload": false,
@@ -209,7 +209,7 @@
         "dataType": "HoldingRegister",
         "adr": "200",
         "quantity": "1",
-        "server": "3bf26672a55906c8",
+        "server": "181499f8d5ee5473",
         "emptyMsgOnFail": false,
         "keepMsgProperties": false,
         "delayOnStart": false,
@@ -218,114 +218,6 @@
         "y": 180,
         "wires": [
             [],
-            []
-        ]
-    },
-    {
-        "id": "1514aac80d9dcfeb",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "1000",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1140,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "b2c19b84616adf9a",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "500",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1200,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "5440612fbd644359",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "100",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1260,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "1bc82c53260d1464",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "0",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1320,
-        "wires": [
             []
         ]
     },
@@ -341,7 +233,7 @@
         "dataType": "HoldingRegister",
         "adr": "201",
         "quantity": "1",
-        "server": "3bf26672a55906c8",
+        "server": "181499f8d5ee5473",
         "emptyMsgOnFail": false,
         "keepMsgProperties": false,
         "delayOnStart": false,
@@ -354,114 +246,6 @@
         ]
     },
     {
-        "id": "d77523b7d58f390f",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "1000",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1400,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "69e5e67533111732",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "500",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1460,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "d7f2b9412043129c",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "100",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1520,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "fbc7419c4194d959",
-        "type": "inject",
-        "z": "02879a116768cda2",
-        "name": "",
-        "props": [
-            {
-                "p": "payload"
-            },
-            {
-                "p": "topic",
-                "vt": "str"
-            }
-        ],
-        "repeat": "",
-        "crontab": "",
-        "once": false,
-        "onceDelay": 0.1,
-        "topic": "",
-        "payload": "0",
-        "payloadType": "num",
-        "x": 1650,
-        "y": 1580,
-        "wires": [
-            []
-        ]
-    },
-    {
         "id": "6e10b9542d02d7a3",
         "type": "ui_chart",
         "z": "02879a116768cda2",
@@ -470,7 +254,7 @@
         "order": 0,
         "width": 0,
         "height": 0,
-        "label": "Water Level History",
+        "label": "Water Level History (cm)",
         "chartType": "line",
         "legend": "false",
         "xformat": "HH:mm",
@@ -499,7 +283,7 @@
         "outputs": 1,
         "useDifferentColor": false,
         "className": "",
-        "x": 570,
+        "x": 590,
         "y": 620,
         "wires": [
             []
@@ -709,7 +493,7 @@
         "order": 0,
         "width": 0,
         "height": 0,
-        "label": "Flow/Discharge History",
+        "label": "Discharge History (%)",
         "chartType": "line",
         "legend": "false",
         "xformat": "HH:mm",
@@ -738,7 +522,7 @@
         "outputs": 1,
         "useDifferentColor": false,
         "className": "",
-        "x": 1370,
+        "x": 1360,
         "y": 620,
         "wires": [
             []
@@ -837,7 +621,7 @@
         "type": "range",
         "z": "02879a116768cda2",
         "minin": "0",
-        "maxin": "500",
+        "maxin": "850",
         "minout": "0",
         "maxout": "100",
         "action": "scale",
@@ -854,15 +638,15 @@
         ]
     },
     {
-        "id": "3bf26672a55906c8",
+        "id": "181499f8d5ee5473",
         "type": "modbus-client",
-        "name": "FACTORY IO NCR",
+        "name": "factoryIO cubeworks",
         "clienttype": "tcp",
         "bufferCommands": true,
         "stateLogEnabled": false,
         "queueLogEnabled": false,
         "failureLogEnabled": true,
-        "tcpHost": "192.168.50.241",
+        "tcpHost": "10.40.71.126",
         "tcpPort": 502,
         "tcpType": "DEFAULT",
         "serialPort": "/dev/ttyUSB",
@@ -925,7 +709,7 @@
         "hidden": false
     },
     {
-        "id": "f42559bc454ee3d0",
+        "id": "6dbd6eba4c8342dc",
         "type": "global-config",
         "env": [],
         "modules": {
