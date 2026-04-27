@@ -21,6 +21,13 @@ Lag fixes applied
 8.  spline_length() caps sample points at 500 (was already there) but also
     skips spline entirely for very short paths (< 20 pts) to avoid splprep
     overhead on noise segments.
+
+UI Changes
+----------
+- Mask/Skeleton bottom strip removed; Live Feed and Measurement View now
+  fill the full height of the window.
+- "Show Mask/Skel View" checkbox opens/closes a floating Toplevel popup
+  instead of toggling the bottom strip.
 """
 
 import cv2
@@ -355,8 +362,6 @@ def fit_image(cv_img, box_w, box_h):
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  THREAD 1 – CAPTURE
-#  Reads frames from the camera as fast as possible.
-#  Drops the stale frame in the queue before pushing the new one.
 # ══════════════════════════════════════════════════════════════════════════════
 class CaptureThread(threading.Thread):
     def __init__(self):
@@ -368,11 +373,9 @@ class CaptureThread(threading.Thread):
 
     def open(self, url):
         cap = cv2.VideoCapture(url)
-        # For network streams isOpened() is not enough — actually read a frame
         if not cap.isOpened():
             cap.release(); return False
-        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)   # keep buffer tiny
-        # Try up to 3 frames to confirm stream is alive
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         for _ in range(3):
             ret, _ = cap.read()
             if ret:
@@ -396,7 +399,6 @@ class CaptureThread(threading.Thread):
             if not ret:
                 self.fail += 1; time.sleep(0.03); continue
             self.fail = 0
-            # Always keep queue at latest frame
             if self.q.full():
                 try: self.q.get_nowait()
                 except queue.Empty: pass
@@ -404,7 +406,6 @@ class CaptureThread(threading.Thread):
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  THREAD 2 – PROCESSING
-#  Consumes raw frames, runs the heavy CV pipeline, pushes render-ready data.
 # ══════════════════════════════════════════════════════════════════════════════
 class ProcessThread(threading.Thread):
     def __init__(self, cap_q):
@@ -415,7 +416,6 @@ class ProcessThread(threading.Thread):
         self._lock  = threading.Lock()
         self._p     = dict(bsz=DEF_BS, co=DEF_CO, ms=DEF_MS,
                            bls=DEF_BL, ci=DEF_CI, bm=True)
-        # Cached homography (updated from main thread)
         self.H           = None
         self.wsize       = None
         self.raw_corners = None
@@ -475,7 +475,7 @@ class ProcessThread(threading.Thread):
 #  TKINTER UI
 # ══════════════════════════════════════════════════════════════════════════════
 class App:
-    SW=340; TH=40; MH=180
+    SW=340; TH=40
 
     def __init__(self):
         self.settings = load_settings()
@@ -486,6 +486,11 @@ class App:
         self._save_n  = 0
         self.trunk_buf=deque(maxlen=SMOOTH_W)
         self.br_bufs={}; self.tot_bufs={}
+
+        # Mask popup state
+        self.mask_win  = None   # Toplevel or None
+        self.mask_lbl  = None   # Label inside popup
+        self._mask_ref = None   # PhotoImage reference
 
         self.cap_th  = CaptureThread();  self.cap_th.start()
         self.proc_th = ProcessThread(self.cap_th.q); self.proc_th.start()
@@ -526,24 +531,25 @@ class App:
         # ── body ──
         body=tk.Frame(self.root,bg="#1e1e1e"); body.pack(fill=tk.BOTH,expand=True)
 
-        # sidebar – fixed width, split into top (measurements) + bottom (tuning)
+        # ── sidebar ──
         sb=tk.Frame(body,bg="#1e1e1e",width=self.SW)
         sb.pack(side=tk.RIGHT,fill=tk.Y,padx=(4,6),pady=4)
         sb.pack_propagate(False)
 
-        # ── bottom tuning section (packed first so it anchors to bottom) ──
+        # bottom tuning section
         sb_bot=tk.Frame(sb,bg="#1e1e1e"); sb_bot.pack(side=tk.BOTTOM,fill=tk.X)
 
         tk.Label(sb_bot,text="Tuning",bg="#1e1e1e",fg="#aaa",
                  font=("Segoe UI",10,"bold")).pack(anchor=tk.W,pady=(4,0))
         sf=tk.Frame(sb_bot,bg="#1e1e1e"); sf.pack(fill=tk.X)
 
-        # ── top measurements section (fills remaining space) ──
+        # top measurements section
         sb_top=tk.Frame(sb,bg="#1e1e1e"); sb_top.pack(side=tk.TOP,fill=tk.BOTH,expand=True)
         tk.Label(sb_top,text="Measurements",bg="#1e1e1e",fg="#aaa",
                  font=("Segoe UI",10,"bold")).pack(anchor=tk.W,pady=(2,0))
         self.info_lbl=tk.Label(sb_top,bg="#111")
         self.info_lbl.pack(fill=tk.BOTH,expand=True,pady=(2,6))
+
         self.sliders={}
         for name,lo,hi,key in [("Block Size",3,101,"block_size"),
                                 ("C Offset",0,30,"c_offset"),
@@ -565,7 +571,7 @@ class App:
         self.mask_v=tk.BooleanVar(value=False)
         self.bran_v=tk.BooleanVar(value=True)
         for txt,var,cmd in [("Show Skeleton",self.skel_v,None),
-                             ("Show Mask/Skel View",self.mask_v,None),
+                             ("Show Mask/Skel View",self.mask_v,self._mask_tog),
                              ("Branch Mode",self.bran_v,self._branch_tog)]:
             tk.Checkbutton(tf,text=txt,variable=var,bg="#1e1e1e",fg="#ccc",
                            selectcolor="#333",activebackground="#1e1e1e",
@@ -573,7 +579,7 @@ class App:
         tk.Button(tf,text="Screenshot",bg="#555",fg="white",font=("Segoe UI",9),
                   command=self._screenshot).pack(anchor=tk.W,pady=(6,0))
 
-        # left panel
+        # ── left panel (fills all height) ──
         left=tk.Frame(body,bg="#1e1e1e")
         left.pack(side=tk.LEFT,fill=tk.BOTH,expand=True,padx=(6,0),pady=4)
 
@@ -592,14 +598,6 @@ class App:
         self.meas_c=tk.Frame(mf,bg="#111"); self.meas_c.pack(fill=tk.BOTH,expand=True)
         self.meas_c.pack_propagate(False)
         self.meas_l=tk.Label(self.meas_c,bg="#111"); self.meas_l.place(x=0,y=0)
-
-        mkf=tk.Frame(left,bg="#1e1e1e",height=self.MH)
-        mkf.pack(fill=tk.X,side=tk.BOTTOM,pady=(4,0)); mkf.pack_propagate(False)
-        tk.Label(mkf,text="Mask / Skeleton",bg="#1e1e1e",fg="#aaa",
-                 font=("Segoe UI",9,"bold")).pack(anchor=tk.W)
-        self.mask_c=tk.Frame(mkf,bg="#111"); self.mask_c.pack(fill=tk.BOTH,expand=True)
-        self.mask_c.pack_propagate(False)
-        self.mask_l=tk.Label(self.mask_c,bg="#111"); self.mask_l.place(x=0,y=0)
 
         self.root.after(100, self._init_ph)
 
@@ -634,8 +632,79 @@ class App:
     def _init_ph(self):
         self._ph(self.live_c,self.live_l,"No camera connected")
         self._ph(self.meas_c,self.meas_l,"Waiting for feed...")
-        self._ph(self.mask_c,self.mask_l,"")
         self._show_info(np.zeros((500,600,3),np.uint8))
+
+    # ── mask popup ────────────────────────────────────────────────────────────
+    def _mask_tog(self):
+        """Open or close the Mask/Skeleton popup based on checkbox state."""
+        if self.mask_v.get():
+            self._open_mask_popup()
+        else:
+            self._close_mask_popup()
+
+    def _open_mask_popup(self):
+        if self.mask_win is not None:
+            try:
+                self.mask_win.lift(); return
+            except tk.TclError:
+                self.mask_win = None
+
+        win = tk.Toplevel(self.root)
+        win.title("Mask / Skeleton View")
+        win.configure(bg="#111")
+        win.geometry("900x420")
+        win.minsize(600, 300)
+
+        # Header
+        hdr = tk.Frame(win, bg="#2d2d2d", height=28)
+        hdr.pack(fill=tk.X, side=tk.TOP)
+        hdr.pack_propagate(False)
+        tk.Label(hdr, text="Left: Wire Mask    Right: Skeleton",
+                 bg="#2d2d2d", fg="#aaa", font=("Segoe UI", 9)).pack(side=tk.LEFT, padx=8)
+
+        # Image label
+        lbl = tk.Label(win, bg="#111")
+        lbl.pack(fill=tk.BOTH, expand=True)
+        self.mask_lbl = lbl
+        self.mask_win = win
+
+        # Uncheck if user closes the popup manually
+        win.protocol("WM_DELETE_WINDOW", self._on_popup_close)
+
+    def _close_mask_popup(self):
+        if self.mask_win is not None:
+            try: self.mask_win.destroy()
+            except tk.TclError: pass
+            self.mask_win = None
+            self.mask_lbl = None
+
+    def _on_popup_close(self):
+        """Called when user clicks the X on the popup."""
+        self.mask_v.set(False)
+        self._close_mask_popup()
+
+    def _update_mask_popup(self, wm, sk):
+        """Push a new mask+skeleton image to the popup (if open)."""
+        if self.mask_win is None or self.mask_lbl is None:
+            return
+        try:
+            self.mask_lbl.update_idletasks()
+            bw = self.mask_lbl.winfo_width()  or 900
+            bh = self.mask_lbl.winfo_height() or 392
+        except tk.TclError:
+            return
+
+        mb = cv2.cvtColor(wm, cv2.COLOR_GRAY2BGR)
+        sb = cv2.cvtColor(sk, cv2.COLOR_GRAY2BGR); sb[sk > 0] = (0, 255, 0)
+        combined = np.hstack([mb, sb])
+
+        pil = fit_image(combined, bw, bh)
+        ph = ImageTk.PhotoImage(pil)
+        try:
+            self.mask_lbl.configure(image=ph)
+        except tk.TclError:
+            return
+        self._mask_ref = ph   # keep reference
 
     # ── settings ──────────────────────────────────────────────────────────────
     def _export(self):
@@ -669,7 +738,6 @@ class App:
         if not url: self.stat_lbl.config(text="  Enter URL",fg="#ff5555"); return
         self.stat_lbl.config(text="  Connecting…",fg="#ffaa00")
         self.conn_btn.config(state=tk.DISABLED); self.root.update_idletasks()
-        # Run the blocking open() in a thread so the UI stays responsive
         def _do_connect():
             ok = self.cap_th.open(url)
             self.root.after(0, lambda: self._on_connect_result(ok, url))
@@ -696,20 +764,13 @@ class App:
         self.url_ent.config(state=tk.NORMAL)
         self._ph(self.live_c,self.live_l,"No camera connected")
         self._ph(self.meas_c,self.meas_l,"Waiting for feed…")
-        self._ph(self.mask_c,self.mask_l,"")
 
-    # ── ARUCO LOOP (main thread, ~30 fps, very cheap) ─────────────────────────
+    # ── ARUCO LOOP ────────────────────────────────────────────────────────────
     def _aruco_loop(self):
-        """
-        Peek at the latest raw frame (no pop), run ArUco detection,
-        update homography in the process thread, and show the live feed.
-        This is intentionally lightweight — no heavy CV here.
-        """
         if not self.running: return
 
-        # Peek without removing (so process thread still gets it)
         try:
-            frame = self.cap_th.q.queue[0].copy()   # thread-safe peek
+            frame = self.cap_th.q.queue[0].copy()
         except (IndexError, AttributeError):
             self.root.after(30, self._aruco_loop); return
 
@@ -740,7 +801,6 @@ class App:
         cv2.putText(frame,f"Scale: {SCALE:.4f} mm/px",(220,28),cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,255,255),1)
         self._show(self.live_c,self.live_l,frame,"live")
 
-        # Push params to process thread
         bsz=max(self.sliders["Block Size"].get(),3)
         co =self.sliders["C Offset"].get()
         ms =max(self.sliders["Morph Size"].get(),1)
@@ -751,7 +811,7 @@ class App:
 
         self.root.after(30, self._aruco_loop)
 
-    # ── UI LOOP (consume processed results) ───────────────────────────────────
+    # ── UI LOOP ───────────────────────────────────────────────────────────────
     def _ui_loop(self):
         if not self.running: return
 
@@ -846,12 +906,9 @@ class App:
                     cv2.FONT_HERSHEY_SIMPLEX,0.6,(0,255,255),2)
         self._show(self.meas_c,self.meas_l,disp,"meas")
 
+        # Update mask popup (only if open)
         if sm:
-            mb=cv2.cvtColor(wm,cv2.COLOR_GRAY2BGR)
-            sb=cv2.cvtColor(sk,cv2.COLOR_GRAY2BGR); sb[sk>0]=(0,255,0)
-            self._show(self.mask_c,self.mask_l,np.hstack([mb,sb]),"mask")
-        else:
-            self._ph(self.mask_c,self.mask_l,"Enable 'Show Mask/Skel View'")
+            self._update_mask_popup(wm, sk)
 
         self._show_info(info)
 
@@ -877,6 +934,7 @@ class App:
 
     def _close(self):
         self.running=False
+        self._close_mask_popup()
         self.cap_th.stop(); self.proc_th.stop()
         if self.cap_th.cap: self.cap_th.cap.release()
         self.root.destroy()
