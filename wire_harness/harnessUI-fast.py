@@ -801,27 +801,27 @@ class App:
 
                 y0=30; nb=len(bis)
                 cv2.putText(info,f"Harness: 1 trunk + {nb} branch(es)",(10,y0),
-                            cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),2); y0+=40
+                            cv2.FONT_HERSHEY_SIMPLEX,0.8,(255,255,255),2); y0+=40
                 cv2.putText(info,f"Trunk:  {ta:.1f} mm  ({ta/10:.2f} cm)",(10,y0),
-                            cv2.FONT_HERSHEY_SIMPLEX,0.55,(0,0,255),2); y0+=30
+                            cv2.FONT_HERSHEY_SIMPLEX,0.65,(0,0,255),2); y0+=30
                 for i in range(nb):
                     col=BC[i%len(BC)]
                     ba=float(np.mean(self.br_bufs[i])) if i in self.br_bufs else 0
                     cv2.putText(info,f"Branch {i+1}: {ba:.1f} mm ({ba/10:.2f} cm)",(10,y0),
-                                cv2.FONT_HERSHEY_SIMPLEX,0.5,col,1); y0+=25
+                                cv2.FONT_HERSHEY_SIMPLEX,0.6,col,1); y0+=25
                 y0+=10; cv2.line(info,(10,y0),(IW-10,y0),(100,100,100),1); y0+=25
                 cv2.putText(info,"Totals (trunk+branch):",(10,y0),
-                            cv2.FONT_HERSHEY_SIMPLEX,0.55,(255,255,255),1); y0+=30
+                            cv2.FONT_HERSHEY_SIMPLEX,0.65,(255,255,255),1); y0+=30
                 for i in range(nb):
                     col=BC[i%len(BC)]
                     tota=float(np.mean(self.tot_bufs[i])) if i in self.tot_bufs else 0
                     cv2.putText(info,f"Total {i+1}: {tota:.1f} mm ({tota/10:.2f} cm)",(10,y0),
-                                cv2.FONT_HERSHEY_SIMPLEX,0.6,col,2); y0+=30
+                                cv2.FONT_HERSHEY_SIMPLEX,0.7,col,2); y0+=30
                 cv2.putText(info,f"(avg {len(self.trunk_buf)} frames)",
-                            (10,min(y0+10,IH-10)),cv2.FONT_HERSHEY_SIMPLEX,0.4,(150,150,150),1)
+                            (10,min(y0+10,IH-10)),cv2.FONT_HERSHEY_SIMPLEX,0.5,(150,150,150),1)
             else:
                 cv2.putText(info,"No junction – simple fallback",(10,30),
-                            cv2.FONT_HERSHEY_SIMPLEX,0.5,(0,165,255),1)
+                            cv2.FONT_HERSHEY_SIMPLEX,0.6,(0,165,255),1)
                 y0=60
                 for i,(path,lpx) in enumerate((st or [])[:6]):
                     mm=lpx*SCALE; clr=BC[i%len(BC)]
@@ -829,18 +829,18 @@ class App:
                         cv2.polylines(disp,[np.array(path,np.int32).reshape(-1,1,2)],False,clr,2)
                         cv2.circle(disp,path[0],6,clr,-1); cv2.circle(disp,path[-1],6,clr,-1)
                     cv2.putText(info,f"#{i+1}: {mm:.1f} mm ({mm/10:.2f} cm)",(10,y0),
-                                cv2.FONT_HERSHEY_SIMPLEX,0.5,clr,1); y0+=25
+                                cv2.FONT_HERSHEY_SIMPLEX,0.6,clr,1); y0+=25
         else:
             y0=30
             cv2.putText(info,"Simple Strand Mode",(10,y0),
-                        cv2.FONT_HERSHEY_SIMPLEX,0.7,(255,255,255),2); y0+=35
+                        cv2.FONT_HERSHEY_SIMPLEX,0.8,(255,255,255),2); y0+=35
             for i,(path,lpx) in enumerate((st or [])[:8]):
                 mm=lpx*SCALE; clr=BC[i%len(BC)]
                 if ss and len(path)>1:
                     cv2.polylines(disp,[np.array(path,np.int32).reshape(-1,1,2)],False,clr,2)
                     cv2.circle(disp,path[0],6,clr,-1); cv2.circle(disp,path[-1],6,clr,-1)
                 cv2.putText(info,f"#{i+1}: {mm:.1f} mm ({mm/10:.2f} cm)",(10,y0),
-                            cv2.FONT_HERSHEY_SIMPLEX,0.5,clr,1); y0+=25
+                            cv2.FONT_HERSHEY_SIMPLEX,0.6,clr,1); y0+=25
 
         cv2.putText(disp,"BRANCH" if bm else "SIMPLE",(10,30),
                     cv2.FONT_HERSHEY_SIMPLEX,0.6,(0,255,255),2)
